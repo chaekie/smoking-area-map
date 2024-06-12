@@ -7,13 +7,13 @@
 
 import KakaoMapsSDK
 import SwiftUI
-import UIKit
 
 struct MapView: UIViewRepresentable {
     @Binding var draw: Bool
+    @Binding var coordinator: KakaoMapCoordinator
+    static let mapViewName = "smokingAreaMapView"
 
     func makeUIView(context: Self.Context) -> KMViewContainer {
-        //need to correct view size
         let view: KMViewContainer = KMViewContainer(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
 
         context.coordinator.createController(view)
@@ -21,8 +21,6 @@ struct MapView: UIViewRepresentable {
         return view
     }
 
-    /// Updates the presented `UIView` (and coordinator) to the latest
-    /// configuration.
     func updateUIView(_ uiView: KMViewContainer, context: Self.Context) {
         if draw {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -42,13 +40,10 @@ struct MapView: UIViewRepresentable {
     }
 
     func makeCoordinator() -> KakaoMapCoordinator {
-        return KakaoMapCoordinator()
+        return coordinator
     }
 
-    /// Cleans up the presented `UIView` (and coordinator) in
-    /// anticipation of their removal.
     static func dismantleUIView(_ uiView: KMViewContainer, coordinator: KakaoMapCoordinator) {
-
     }
 
     class KakaoMapCoordinator: NSObject, MapControllerDelegate {
@@ -65,23 +60,24 @@ struct MapView: UIViewRepresentable {
         }
 
         func addViews() {
-            let defaultPosition: MapPoint = MapPoint(longitude: 126.978365, latitude: 37.566691)
-            let mapviewInfo: MapviewInfo = MapviewInfo(viewName: "mapview", viewInfoName: "map", defaultPosition: defaultPosition)
-
+            let mapviewInfo: MapviewInfo = MapviewInfo(
+                viewName: MapView.mapViewName,
+                viewInfoName: "map",
+                defaultPosition: defaultPostion
+            )
             controller?.addView(mapviewInfo)
         }
 
         func addViewSucceeded(_ viewName: String, viewInfoName: String) {
-            print("OK")
-            let view = controller?.getView("mapview")
+            let view = controller?.getView(MapView.mapViewName)
             view?.viewRect = container!.bounds
         }
 
         func containerDidResized(_ size: CGSize) {
-            let mapView: KakaoMap? = controller?.getView("mapview") as? KakaoMap
+            let mapView: KakaoMap? = controller?.getView(MapView.mapViewName) as? KakaoMap
             mapView?.viewRect = CGRect(origin: CGPoint(x: 0.0, y: 0.0), size: size)
             if first {
-                let cameraUpdate: CameraUpdate = CameraUpdate.make(target: MapPoint(longitude: 126.978365, latitude: 37.566691), mapView: mapView!)
+                let cameraUpdate: CameraUpdate = CameraUpdate.make(target: defaultPostion, mapView: mapView!)
                 mapView?.moveCamera(cameraUpdate)
                 first = false
             }
@@ -95,11 +91,15 @@ struct MapView: UIViewRepresentable {
         var container: KMViewContainer?
         var first: Bool
         var auth: Bool
+
+        private let defaultPostion = MapPoint(longitude: 126.978365, latitude: 37.566691)
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        MapView(draw: .constant(false))
+        MapView(draw: .constant(false), 
+                coordinator: .constant(MapView.KakaoMapCoordinator())
+        )
     }
 }
