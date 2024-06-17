@@ -9,7 +9,7 @@ import CoreLocation
 import Foundation
 import KakaoMapsSDK
 
-final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
+class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
     @Published var lastLocation: CLLocation?
 
@@ -43,10 +43,9 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
         print(#function, error)
     }
 
-    func shouldMoveToCurrentLocation(controller: KMController, status: String) -> Bool {
+    func shouldMoveToCurrentLocation(view: KakaoMap, status: String) -> Bool {
         if status == "4" || status == "5" {
-            guard let coordinate = lastLocation?.coordinate,
-            let view = controller.getView(MapView.mapViewName) as? KakaoMap else {
+            guard let coordinate = lastLocation?.coordinate else {
                 return false
             }
 

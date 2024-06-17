@@ -5,16 +5,15 @@
 //  Created by chaekie on 6/11/24.
 //
 
+import CoreLocation
 import KakaoMapsSDK
 import SwiftUI
 
 struct MapView: UIViewRepresentable {
     static let mapViewName = "smokingAreaMapView"
+    @EnvironmentObject var locationManager: LocationManager
     @Binding var draw: Bool
     @Binding var coordinator: KakaoMapCoordinator
-
-    @EnvironmentObject var locationManager: LocationManager
-    @State private var isInCurrentLocation = false
 
     func makeUIView(context: Self.Context) -> KMViewContainer {
         let view: KMViewContainer = KMViewContainer(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
@@ -38,21 +37,7 @@ struct MapView: UIViewRepresentable {
                 if controller.isEngineActive == false {
                     controller.activateEngine()
                 }
-
-                if isInCurrentLocation == false {
-                    let status = UserDefaults.standard.string(forKey: "locationStatus")
-                    guard let status = status else { return }
-
-                    isInCurrentLocation = locationManager.shouldMoveToCurrentLocation(
-                        controller: controller,
-                        status: status
-                    )
-                }
             }
-        }
-        else {
-            controller.pauseEngine()
-            controller.resetEngine()
         }
     }
 
@@ -63,24 +48,85 @@ struct MapView: UIViewRepresentable {
     static func dismantleUIView(_ uiView: KMViewContainer, coordinator: KakaoMapCoordinator) {
     }
 
-    class KakaoMapCoordinator: NSObject, MapControllerDelegate {
-        private let defaultPostion = MapPoint(longitude: 126.978365, latitude: 37.566691)
+    class KakaoMapCoordinator: LocationManager, MapControllerDelegate {
         
-        var controller: KMController?
-        var container: KMViewContainer?
-        var first: Bool
-        var auth: Bool
-
         override init() {
             first = true
             auth = false
             super.init()
         }
 
+        deinit {
+            controller?.pauseEngine()
+            controller?.resetEngine()
+        }
+
         func createController(_ view: KMViewContainer) {
             container = view
             controller = KMController(viewContainer: view)
             controller?.delegate = self
+        }
+
+        private func createLabelLayer(view: KakaoMap, layer: Layer) {
+            let manager = view.getLabelManager()
+            let layerOption = LabelLayerOptions(layerID: layer.id, competitionType: .none, competitionUnit: .poi, orderType: .rank, zOrder: layer.zOrder)
+            let _ = manager.addLabelLayer(option: layerOption)
+        }
+
+        private func createPoiStyle(view: KakaoMap, style: Style)  {
+            let manager = view.getLabelManager()
+            let iconStyle = PoiIconStyle(symbol: style.symbol, anchorPoint: CGPoint(x: 0.0, y: 0.5))
+            let perLevelStyle = PerLevelPoiStyle(iconStyle: iconStyle, level: 0)
+            let poiStyle = PoiStyle(styleID: style.id, styles: [perLevelStyle])
+            manager.addPoiStyle(poiStyle)
+        }
+
+        private func createPois(view: KakaoMap, layer: Layer, style: Style) {
+            let manager = view.getLabelManager()
+            let layer = manager.getLabelLayer(layerID: layer.id)
+            layer?.clearAllItems()
+            let poiOption = PoiOptions(styleID: style.id)
+            poiOption.rank = 0
+
+            guard let coordinate = lastLocation?.coordinate else { return }
+            let poi1 = layer?.addPoi(option: poiOption,
+                                     at: MapPoint(longitude: coordinate.longitude,
+                                                  latitude: coordinate.latitude),
+                                     callback: {(_ poi: (Poi?)) -> Void in
+                print("")
+            })
+            poi1?.show()
+        }
+
+        override func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+            guard let location = locations.last else { return }
+            lastLocation = location
+
+            if let view = controller?.getView(MapView.mapViewName) as? KakaoMap {
+                createPois(view: view, layer: currentPositionLayer, style: currentPositionStyle)
+            }
+
+        }
+
+        private func setPois(_ view: KakaoMap) {
+            createLabelLayer(view: view, layer: currentPositionLayer)
+            createLabelLayer(view: view, layer: spotLayer)
+
+            createPoiStyle(view: view, style: currentPositionStyle)
+            createPoiStyle(view: view, style: spotStyle)
+
+            createPois(view: view, layer: currentPositionLayer, style: currentPositionStyle)
+//            createPois(view: view, layer: spotLayer, style: spotStyle)
+        }
+
+        private func viewInit(viewName: String) {
+            let status = UserDefaults.standard.string(forKey: "locationStatus")
+            guard let status = status,
+                  let view = controller?.getView(viewName) as? KakaoMap else {
+                return
+            }
+            let _ = shouldMoveToCurrentLocation(view: view, status: status)
+            setPois(view)
         }
 
         func addViews() {
@@ -95,6 +141,7 @@ struct MapView: UIViewRepresentable {
         func addViewSucceeded(_ viewName: String, viewInfoName: String) {
             let view = controller?.getView(MapView.mapViewName)
             view?.viewRect = container!.bounds
+            viewInit(viewName: viewName)
         }
 
         func containerDidResized(_ size: CGSize) {
@@ -110,6 +157,31 @@ struct MapView: UIViewRepresentable {
         func authenticationSucceeded() {
             auth = true
         }
+
+        var controller: KMController?
+        var container: KMViewContainer?
+        var first: Bool
+        var auth: Bool
+
+        private let defaultPostion = MapPoint(longitude: 126.978365, latitude: 37.566691)
+        private let currentPositionLayer = Layer(id: "currentPositionLayer",
+                                                 zOrder: 10001)
+        private let spotLayer = Layer(id: "spotLayer",
+                                      zOrder: 10002)
+        private let currentPositionStyle = Style(id: "currentPositionPoiStyle",
+                                                 symbol: UIImage(systemName: "circle.circle.fill")?.withTintColor(.red))
+        private let spotStyle = Style(id: "spotStyle",
+                                      symbol: UIImage(systemName: "mappin")?.withTintColor(.blue))
+    }
+
+    private struct Layer {
+        var id: String
+        var zOrder: Int
+    }
+
+    private struct Style {
+        var id: String
+        var symbol: UIImage?
     }
 }
 

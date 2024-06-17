@@ -5,6 +5,7 @@
 //  Created by chaekie on 6/10/24.
 //
 
+import KakaoMapsSDK
 import SwiftUI
 
 struct ContentView: View {
@@ -59,11 +60,10 @@ struct ContentView: View {
         let status = UserDefaults.standard.string(forKey: "locationStatus")
 
         guard let controller = coordinator.controller,
-        let status = status else {
-            return
-        }
+              let view = controller.getView(MapView.mapViewName) as? KakaoMap,
+              let status = status else { return }
 
-        isUnauthorized = !locationManager.shouldMoveToCurrentLocation(controller: controller, status: status)
+        isUnauthorized = !locationManager.shouldMoveToCurrentLocation(view: view, status: status)
     }
 }
 
