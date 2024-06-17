@@ -7,6 +7,7 @@
 
 import CoreLocation
 import Foundation
+import KakaoMapsSDK
 
 final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let locationManager = CLLocationManager()
@@ -40,5 +41,35 @@ final class LocationManager: NSObject, ObservableObject, CLLocationManagerDelega
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print(#function, error)
+    }
+
+    func shouldMoveToCurrentLocation(controller: KMController, status: String) -> Bool {
+        if status == "4" || status == "5" {
+            guard let coordinate = lastLocation?.coordinate,
+            let view = controller.getView(MapView.mapViewName) as? KakaoMap else {
+                return false
+            }
+
+            let cameraUpdate = CameraUpdate.make(
+                target: MapPoint(longitude: coordinate.longitude,
+                                 latitude: coordinate.latitude),
+                zoomLevel: 17,
+                rotation: 0.0,
+                tilt: 0.0,
+                mapView: view
+            )
+
+            view.animateCamera(cameraUpdate: cameraUpdate,
+                               options: CameraAnimationOptions(
+                                autoElevation: false,
+                                consecutive: true,
+                                durationInMillis: 300
+                               )
+            )
+            return true
+            
+        } else {
+            return false
+        }
     }
 }

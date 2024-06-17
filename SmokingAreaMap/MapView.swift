@@ -9,9 +9,12 @@ import KakaoMapsSDK
 import SwiftUI
 
 struct MapView: UIViewRepresentable {
+    static let mapViewName = "smokingAreaMapView"
     @Binding var draw: Bool
     @Binding var coordinator: KakaoMapCoordinator
-    static let mapViewName = "smokingAreaMapView"
+
+    @EnvironmentObject var locationManager: LocationManager
+    @State private var isInCurrentLocation = false
 
     func makeUIView(context: Self.Context) -> KMViewContainer {
         let view: KMViewContainer = KMViewContainer(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
@@ -22,20 +25,34 @@ struct MapView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: KMViewContainer, context: Self.Context) {
+        guard let controller = coordinator.controller else {
+            return
+        }
+
         if draw {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                if context.coordinator.controller?.isEnginePrepared == false {
-                    context.coordinator.controller?.prepareEngine()
+                if controller.isEnginePrepared == false {
+                    controller.prepareEngine()
                 }
 
-                if context.coordinator.controller?.isEngineActive == false {
-                    context.coordinator.controller?.activateEngine()
+                if controller.isEngineActive == false {
+                    controller.activateEngine()
+                }
+
+                if isInCurrentLocation == false {
+                    let status = UserDefaults.standard.string(forKey: "locationStatus")
+                    guard let status = status else { return }
+
+                    isInCurrentLocation = locationManager.shouldMoveToCurrentLocation(
+                        controller: controller,
+                        status: status
+                    )
                 }
             }
         }
         else {
-            context.coordinator.controller?.pauseEngine()
-            context.coordinator.controller?.resetEngine()
+            controller.pauseEngine()
+            controller.resetEngine()
         }
     }
 
@@ -47,6 +64,13 @@ struct MapView: UIViewRepresentable {
     }
 
     class KakaoMapCoordinator: NSObject, MapControllerDelegate {
+        private let defaultPostion = MapPoint(longitude: 126.978365, latitude: 37.566691)
+        
+        var controller: KMController?
+        var container: KMViewContainer?
+        var first: Bool
+        var auth: Bool
+
         override init() {
             first = true
             auth = false
@@ -74,10 +98,10 @@ struct MapView: UIViewRepresentable {
         }
 
         func containerDidResized(_ size: CGSize) {
-            let mapView: KakaoMap? = controller?.getView(MapView.mapViewName) as? KakaoMap
+            let mapView = controller?.getView(MapView.mapViewName) as? KakaoMap
             mapView?.viewRect = CGRect(origin: CGPoint(x: 0.0, y: 0.0), size: size)
             if first {
-                let cameraUpdate: CameraUpdate = CameraUpdate.make(target: defaultPostion, mapView: mapView!)
+                let cameraUpdate = CameraUpdate.make(target: defaultPostion, mapView: mapView!)
                 mapView?.moveCamera(cameraUpdate)
                 first = false
             }
@@ -86,19 +110,12 @@ struct MapView: UIViewRepresentable {
         func authenticationSucceeded() {
             auth = true
         }
-
-        var controller: KMController?
-        var container: KMViewContainer?
-        var first: Bool
-        var auth: Bool
-
-        private let defaultPostion = MapPoint(longitude: 126.978365, latitude: 37.566691)
     }
 }
 
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
-        MapView(draw: .constant(false), 
+        MapView(draw: .constant(false),
                 coordinator: .constant(MapView.KakaoMapCoordinator())
         )
     }

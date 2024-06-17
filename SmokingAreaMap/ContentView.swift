@@ -6,13 +6,12 @@
 //
 
 import SwiftUI
-import KakaoMapsSDK
 
 struct ContentView: View {
+    @EnvironmentObject var locationManager: LocationManager
+
     @State var draw: Bool = false
     @State var coordinator = MapView.KakaoMapCoordinator()
-    @StateObject var locationManager = LocationManager()
-
     @State private var isUnauthorized = false
 
     var body: some View {
@@ -56,32 +55,22 @@ struct ContentView: View {
         }
     }
 
-    private func moveToCurrentLocation() {
+    func moveToCurrentLocation() {
         let status = UserDefaults.standard.string(forKey: "locationStatus")
 
-        if status == "4" || status == "5" {
-            guard let userLongitude = locationManager.lastLocation?.coordinate.longitude,
-                  let userLatitude = locationManager.lastLocation?.coordinate.latitude,
-                  let controller = coordinator.controller else {
-                return
-            }
-
-            let view = controller.getView(MapView.mapViewName) as! KakaoMap
-            let cameraUpdate = CameraUpdate.make(
-                target: MapPoint(longitude: userLongitude, latitude: userLatitude),
-                zoomLevel: 17,
-                rotation: 0.0,
-                tilt: 0.0,
-                mapView: view
-            )
-
-            view.animateCamera(cameraUpdate: cameraUpdate, options: CameraAnimationOptions(autoElevation: false, consecutive: true, durationInMillis: 500))
-        } else {
-            isUnauthorized = true
+        guard let controller = coordinator.controller,
+        let status = status else {
+            return
         }
+
+        isUnauthorized = !locationManager.shouldMoveToCurrentLocation(controller: controller, status: status)
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject({() -> LocationManager in
+            let envObj = LocationManager()
+            return envObj
+        }() )
 }
