@@ -9,7 +9,7 @@ import KakaoMapsSDK
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var locationManager: LocationManager
+    @StateObject var locationManager = LocationManager()
 
     @State var draw: Bool = false
     @State var coordinator = MapView.KakaoMapCoordinator()
@@ -57,20 +57,13 @@ struct ContentView: View {
     }
 
     func moveToCurrentLocation() {
-        let status = UserDefaults.standard.string(forKey: "locationStatus")
-
         guard let controller = coordinator.controller,
-              let view = controller.getView(MapView.mapViewName) as? KakaoMap,
-              let status = status else { return }
+              let view = controller.getView(MapView.mapViewName) as? KakaoMap else { return }
 
-        isUnauthorized = !locationManager.shouldMoveToCurrentLocation(view: view, status: status)
+        isUnauthorized = !locationManager.shouldMoveToCurrentLocation(view: view)
     }
 }
 
 #Preview {
     ContentView()
-        .environmentObject({() -> LocationManager in
-            let envObj = LocationManager()
-            return envObj
-        }() )
 }

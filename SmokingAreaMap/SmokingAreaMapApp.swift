@@ -10,12 +10,11 @@ import SwiftUI
 @main
 struct SmokingAreaMapApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @StateObject var locationManager = LocationManager()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(locationManager)
+
         }
     }
 }
