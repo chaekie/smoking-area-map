@@ -9,20 +9,19 @@ import KakaoMapsSDK
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject var locationManager = LocationManager()
-
-    @State var draw: Bool = false
-    @State var coordinator = MapView.KakaoMapCoordinator()
-    @State private var isUnauthorized = false
+    @StateObject private var locationManager = LocationManager()
+    private var coordinator = MapView.KakaoMapCoordinator()
+    @State private var isAppear = false
+    @State private var isPresented = false
 
     var body: some View {
-        MapView(draw: $draw, coordinator: $coordinator)
-            .onAppear(perform: {
-                self.draw = true
-            })
-            .onDisappear(perform: {
-                self.draw = false
-            })
+        MapView(isAppear: $isAppear, coordinator: coordinator)
+            .onAppear() {
+                self.isAppear = true
+            }
+            .onDisappear() {
+                self.isAppear = false
+            }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea()
             .overlay(alignment: .bottomTrailing) {
@@ -42,7 +41,7 @@ struct ContentView: View {
                 .shadow(radius: 5)
                 .padding([.bottom, .trailing], 20)
         }
-        .alert("위치 서비스 사용", isPresented: $isUnauthorized) {
+        .alert("위치 서비스 사용", isPresented: $isPresented) {
             Button("취소", role: .cancel) {}
             Button("설정으로 이동") {
                 guard let url = URL(string: UIApplication.openSettingsURLString) else { return
@@ -56,14 +55,15 @@ struct ContentView: View {
         }
     }
 
-    func moveToCurrentLocation() {
+    private func moveToCurrentLocation() {
         guard let controller = coordinator.controller,
               let view = controller.getView(MapView.mapViewName) as? KakaoMap else { return }
 
-        isUnauthorized = !locationManager.shouldMoveToCurrentLocation(view: view)
+        isPresented = !locationManager.shouldMoveToCurrentLocation(view: view)
     }
 }
 
 #Preview {
     ContentView()
 }
+

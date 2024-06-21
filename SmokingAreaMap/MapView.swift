@@ -10,64 +10,57 @@ import KakaoMapsSDK
 import SwiftUI
 
 struct MapView: UIViewRepresentable {
+    @Binding var isAppear: Bool
+    var coordinator: KakaoMapCoordinator
+
     static let mapViewName = "smokingAreaMapView"
-    @Binding var draw: Bool
-    @Binding var coordinator: KakaoMapCoordinator
+    @Environment(\.scenePhase) var scenePhase
 
     func makeUIView(context: Self.Context) -> KMViewContainer {
-        let view: KMViewContainer = KMViewContainer(frame: CGRect(x: 0, y: 0, width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height))
-
+        let view = KMViewContainer()
+        view.sizeToFit()
         context.coordinator.createController(view)
-
         return view
     }
-
+    
     func updateUIView(_ uiView: KMViewContainer, context: Self.Context) {
-        guard let controller = coordinator.controller else { return }
+        guard let controller = context.coordinator.controller else { return }
 
-        if draw {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                if controller.isEnginePrepared == false {
-                    controller.prepareEngine()
-                }
-
-                if controller.isEngineActive == false {
-                    controller.activateEngine()
+            DispatchQueue.main.async {
+                if isAppear {
+                    if scenePhase == .background || scenePhase == .inactive {
+                        controller.pauseEngine()
+                    } else {
+                        if controller.isEnginePrepared == false { controller.prepareEngine() }
+                        if controller.isEngineActive == false { controller.activateEngine() }
+                    }
+                } else {
+                    controller.pauseEngine()
+                    controller.resetEngine()
                 }
             }
-        } else {
-            controller.pauseEngine()
-            controller.resetEngine()
         }
-    }
-
+    
     func makeCoordinator() -> KakaoMapCoordinator {
         return coordinator
     }
 
     static func dismantleUIView(_ uiView: KMViewContainer, coordinator: KakaoMapCoordinator) {
+            coordinator.controller?.pauseEngine()
+            coordinator.controller?.resetEngine()
     }
+
 
     class KakaoMapCoordinator: LocationManager, MapControllerDelegate {
 
         override init() {
             first = true
-            auth = false
             super.init()
         }
 
         func createController(_ view: KMViewContainer) {
-            container = view
             controller = KMController(viewContainer: view)
             controller?.delegate = self
-        }
-
-        override func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-            currentLocation.longitude = locations[0].coordinate.longitude
-            currentLocation.latitude = locations[0].coordinate.latitude
-
-            currentPositionPoi?
-                .moveAt(MapPoint(longitude: currentLocation.longitude, latitude: currentLocation.latitude), duration: 300)
         }
 
         private func setPois(_ view: KakaoMap) {
@@ -102,49 +95,34 @@ struct MapView: UIViewRepresentable {
             currentPositionPoi?.show()
         }
 
-        private func viewInit(viewName: String) {
-            guard let view = controller?.getView(viewName) as? KakaoMap else {
-                return
-            }
-            let _ = shouldMoveToCurrentLocation(view: view)
-            setPois(view)
-        }
-
         func addViews() {
-            let mapviewInfo: MapviewInfo = MapviewInfo(
+            let mapviewInfo = MapviewInfo(
                 viewName: MapView.mapViewName,
-                viewInfoName: "map",
-                defaultPosition: defaultPostion
+                defaultPosition: defaultPosition
             )
             controller?.addView(mapviewInfo)
         }
 
         func addViewSucceeded(_ viewName: String, viewInfoName: String) {
-            let view = controller?.getView(MapView.mapViewName)
-            view?.viewRect = container!.bounds
-            viewInit(viewName: viewName)
+            guard let view = controller?.getView(viewName) as? KakaoMap else { return }
+            let _ = shouldMoveToCurrentLocation(view: view)
+            setPois(view)
         }
 
         func containerDidResized(_ size: CGSize) {
             let mapView = controller?.getView(MapView.mapViewName) as? KakaoMap
             mapView?.viewRect = CGRect(origin: CGPoint(x: 0.0, y: 0.0), size: size)
             if first {
-                let cameraUpdate = CameraUpdate.make(target: defaultPostion, mapView: mapView!)
+                let cameraUpdate = CameraUpdate.make(target: defaultPosition, mapView: mapView!)
                 mapView?.moveCamera(cameraUpdate)
                 first = false
             }
         }
 
-        func authenticationSucceeded() {
-            auth = true
-        }
-
         var controller: KMController?
-        var container: KMViewContainer?
         var first: Bool
-        var auth: Bool
 
-        private let defaultPostion = MapPoint(longitude: 126.978365, latitude: 37.566691)
+        private let defaultPosition = MapPoint(longitude: 126.978365, latitude: 37.566691)
         private let currentPositionLayer = Layer(id: "currentPositionLayer",
                                                  zOrder: 1001)
         private let currentPositionStyle = Style(id: "currentPositionPoiStyle",
@@ -162,11 +140,8 @@ struct MapView: UIViewRepresentable {
     }
 }
 
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        MapView(draw: .constant(false),
-                coordinator: .constant(MapView.KakaoMapCoordinator())
-        )
-    }
+#Preview {
+    MapView(isAppear: .constant(false),
+            coordinator: MapView.KakaoMapCoordinator())
 }
 

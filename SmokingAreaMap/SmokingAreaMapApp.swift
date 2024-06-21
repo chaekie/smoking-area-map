@@ -6,15 +6,21 @@
 //
 
 import SwiftUI
+import KakaoMapsSDK
 
 @main
 struct SmokingAreaMapApp: App {
-    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+
+    init() {
+        guard let infoDic = Bundle.main.infoDictionary else { return }
+        if let kakaoKey = infoDic["KAKAO_NATIVE_APP_KEY"] as? String {
+            SDKInitializer.InitSDK(appKey: kakaoKey)
+        }
+     }
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-
         }
     }
 }

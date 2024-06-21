@@ -45,6 +45,9 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         currentLocation.longitude = locations[0].coordinate.longitude
         currentLocation.latitude = locations[0].coordinate.latitude
+
+        currentPositionPoi?
+            .moveAt(MapPoint(longitude: currentLocation.longitude, latitude: currentLocation.latitude), duration: 300)
     }
 
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
@@ -71,5 +74,4 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     var currentPositionPoi: Poi?
     var locationManager: CLLocationManager
     var locationServiceAuthorized: CLAuthorizationStatus?
-    var timer: Timer?
 }
