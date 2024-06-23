@@ -22,26 +22,6 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
         locationManager.delegate = self
     }
 
-    func shouldMoveToCurrentLocation(view: KakaoMap) -> Bool {
-        if locationServiceAuthorized == .authorizedWhenInUse || locationServiceAuthorized == .authorizedAlways {
-            let cameraUpdate = CameraUpdate.make(
-                target: MapPoint(longitude: currentLocation.longitude,
-                                 latitude: currentLocation.latitude),
-                zoomLevel: 17,
-                rotation: 0.0,
-                tilt: 0.0,
-                mapView: view
-            )
-
-            view.animateCamera(
-                cameraUpdate: cameraUpdate,
-                options: CameraAnimationOptions(autoElevation: false, consecutive: true, durationInMillis: 300)
-            )
-            return true
-        }
-        return false
-    }
-
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         currentLocation.longitude = locations[0].coordinate.longitude
         currentLocation.latitude = locations[0].coordinate.latitude

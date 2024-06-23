@@ -9,13 +9,14 @@ import KakaoMapsSDK
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var locationManager = LocationManager()
-    private var coordinator = MapView.KakaoMapCoordinator()
+    @StateObject private var manager = LocationManager()
+
     @State private var isAppear = false
+    @State private var shouldMove = false
     @State private var isPresented = false
 
     var body: some View {
-        MapView(isAppear: $isAppear, coordinator: coordinator)
+        MapView(isAppear: $isAppear, shouldMove: $shouldMove)
             .onAppear() {
                 self.isAppear = true
             }
@@ -56,10 +57,13 @@ struct ContentView: View {
     }
 
     private func moveToCurrentLocation() {
-        guard let controller = coordinator.controller,
-              let view = controller.getView(MapView.mapViewName) as? KakaoMap else { return }
+        let isAuthorized = manager.locationServiceAuthorized == .authorizedWhenInUse || manager.locationServiceAuthorized == .authorizedAlways
+        shouldMove = isAuthorized
+        isPresented = !isAuthorized
 
-        isPresented = !locationManager.shouldMoveToCurrentLocation(view: view)
+        DispatchQueue.main.async {
+            shouldMove = false
+        }
     }
 }
 
