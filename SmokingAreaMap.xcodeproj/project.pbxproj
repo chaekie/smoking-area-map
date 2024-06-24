@@ -15,6 +15,8 @@
 		51263D462C17F2B80009509F /* KakaoMapsSDK-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 51263D452C17F2B80009509F /* KakaoMapsSDK-SPM */; };
 		51263D4F2C1805880009509F /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51263D4E2C1805880009509F /* MapView.swift */; };
 		51263D522C182F170009509F /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51263D512C182F170009509F /* LocationManager.swift */; };
+		5177DEFD2C292BB9003D8701 /* SmokingAreaManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFC2C292BB9003D8701 /* SmokingAreaManager.swift */; };
+		5177DEFF2C292E77003D8701 /* SmokingArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFE2C292E77003D8701 /* SmokingArea.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +30,8 @@
 		51263D432C16E0C40009509F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		51263D4E2C1805880009509F /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 		51263D512C182F170009509F /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		5177DEFC2C292BB9003D8701 /* SmokingAreaManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingAreaManager.swift; sourceTree = "<group>"; };
+		5177DEFE2C292E77003D8701 /* SmokingArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingArea.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +71,8 @@
 				51263D342C16D2BD0009509F /* ContentView.swift */,
 				51263D4E2C1805880009509F /* MapView.swift */,
 				51263D512C182F170009509F /* LocationManager.swift */,
+				5177DEFC2C292BB9003D8701 /* SmokingAreaManager.swift */,
+				5177DEFE2C292E77003D8701 /* SmokingArea.swift */,
 				51263D382C16D2BF0009509F /* Preview Content */,
 				51263D362C16D2BF0009509F /* Assets.xcassets */,
 				51263D432C16E0C40009509F /* Info.plist */,
@@ -162,6 +168,8 @@
 				51263D352C16D2BD0009509F /* ContentView.swift in Sources */,
 				51263D522C182F170009509F /* LocationManager.swift in Sources */,
 				51263D4F2C1805880009509F /* MapView.swift in Sources */,
+				5177DEFF2C292E77003D8701 /* SmokingArea.swift in Sources */,
+				5177DEFD2C292BB9003D8701 /* SmokingAreaManager.swift in Sources */,
 				51263D332C16D2BD0009509F /* SmokingAreaMapApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

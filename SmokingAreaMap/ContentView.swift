@@ -5,11 +5,11 @@
 //  Created by chaekie on 6/10/24.
 //
 
-import KakaoMapsSDK
 import SwiftUI
 
 struct ContentView: View {
     @StateObject private var manager = LocationManager()
+    @ObservedObject private var smokingAreaManager = SmokingAreaManager()
 
     @State private var isAppear = false
     @State private var shouldMove = false
@@ -19,6 +19,9 @@ struct ContentView: View {
         MapView(isAppear: $isAppear, shouldMove: $shouldMove)
             .onAppear() {
                 self.isAppear = true
+                Task {
+                    await smokingAreaManager.fetchSmokingArea(page: 1)
+                }
             }
             .onDisappear() {
                 self.isAppear = false

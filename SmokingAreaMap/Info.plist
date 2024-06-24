@@ -6,5 +6,7 @@
 	<string>$(KAKAO_NATIVE_APP_KEY)</string>
 	<key>LSEnvironment</key>
 	<dict/>
+	<key>OPEN_DATA_PORTAL_KEY</key>
+	<string>$(OPEN_DATA_PORTAL_KEY)</string>
 </dict>
 </plist>
