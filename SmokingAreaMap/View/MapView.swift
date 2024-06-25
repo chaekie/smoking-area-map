@@ -28,7 +28,7 @@ struct MapView: UIViewRepresentable {
             context.coordinator.moveToCurrentLocation()
             return
         }
-        
+
         guard let controller = context.coordinator.controller else { return }
         DispatchQueue.main.async {
             if isAppear {
@@ -66,7 +66,7 @@ struct MapView: UIViewRepresentable {
             controller = KMController(viewContainer: view)
             controller?.delegate = self
         }
-        
+
         func moveToCurrentLocation() {
             moveCamera(location: currentLocation)
         }
@@ -120,7 +120,7 @@ struct MapView: UIViewRepresentable {
                                                                latitude: currentLocation.latitude))
             currentPositionPoi?.show()
         }
-        
+
         func authenticationSucceeded() {
             if auth == false {
                 auth = true
@@ -132,32 +132,28 @@ struct MapView: UIViewRepresentable {
         }
 
         func authenticationFailed(_ errorCode: Int, desc: String) {
-            print("error code: \(errorCode)")
-            print("desc: \(desc)")
             auth = false
+
+            let error: SAError
             switch errorCode {
             case 400:
-                print("지도 종료(API인증 파라미터 오류)")
-                break;
+                error = SAError(.wrongParameter)
             case 401:
-                print("지도 종료(API인증 키 오류)")
-                break;
+                error = SAError(.wrongApiKey)
             case 403:
-                print("지도 종료(API인증 권한 오류)")
-                break;
+                error = SAError(.unauthorizedApiKey)
             case 429:
-                print("지도 종료(API 사용쿼터 초과)")
-                break;
+                error = SAError(.quotaExceeded)
             case 499:
-                print("지도 종료(네트워크 오류) 5초 후 재시도..")
+                error = SAError(.networkUnavailable, description: "네트워크 오류로 5초 후 재시도..")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
                     print("retry auth...")
                     self.controller?.prepareEngine()
                 }
-                break;
             default:
-                break;
+                error = SAError(.unknownError, description: "error code: \(errorCode)\ndesc: \(desc)")
             }
+            dump(error)
         }
 
         func addViews() {
