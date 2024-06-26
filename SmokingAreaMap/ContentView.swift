@@ -16,7 +16,7 @@ struct ContentView: View {
     @State private var isPresented = false
 
     var body: some View {
-        MapView(isAppear: $isAppear, shouldMove: $shouldMove)
+        MapView(isAppear: $isAppear, shouldMove: $shouldMove, smokingAreas: $smokingAreaManager.smokingAreas)
             .onAppear() {
                 self.isAppear = true
                 Task {

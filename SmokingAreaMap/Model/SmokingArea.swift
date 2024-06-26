@@ -34,12 +34,14 @@ struct SmokingAreaData: Codable {
         let districtEnum = District(rawValue: district) ?? .defaultValue
         let roomTypeEnum = RoomType(rawValue: roomType) ?? .defaultValue
         let spaceEnum = Space(rawValue: space) ?? .defaultValue
+        let longitudeDouble = Double(longitude) ?? 0.0
+        let latitudeDouble = Double(latitude) ?? 0.0
 
         return SmokingArea(
             district: districtEnum,
             address: address,
-            longitude: longitude,
-            latitude: latitude,
+            longitude: longitudeDouble,
+            latitude: latitudeDouble,
             roomType: roomTypeEnum,
             space: spaceEnum
         )
@@ -49,8 +51,8 @@ struct SmokingAreaData: Codable {
 struct SmokingArea: Codable {
     let district: District
     let address: String
-    let longitude: String
-    let latitude: String
+    let longitude: Double
+    let latitude: Double
     let roomType: RoomType
     let space: Space
 }

@@ -12,7 +12,7 @@ class SmokingAreaManager: ObservableObject {
     private let baseURL = "https://api.odcloud.kr/api/"
     private let apiKey = Bundle.main.object(forInfoDictionaryKey: "OPEN_DATA_PORTAL_KEY") as? String
 
-    private var smokingAreas = [SmokingArea]()
+    @Published var smokingAreas = [SmokingArea]()
 
     func parseJSON(_ data: Data) throws -> [SmokingArea] {
           do {
@@ -46,14 +46,17 @@ class SmokingAreaManager: ObservableObject {
         guard let apiKey = apiKey else { return }
 
         let urlString =
-        "\(baseURL)15069051/v1/uddi:2653cc01-60d7-4e8b-81f4-80b24a39d8f6?page=\(page)&perPage=10&serviceKey=\(apiKey)"
+        "\(baseURL)15069051/v1/uddi:2653cc01-60d7-4e8b-81f4-80b24a39d8f6?page=\(page)&perPage=60&serviceKey=\(apiKey)"
         guard let url = URL(string: urlString) else {
-            dump(SAError.init(.invalidUrl))
+            dump(SAError(.invalidUrl))
             return
         }
 
         do {
-            smokingAreas = try await performRequest(with: url)
+            let areas = try await performRequest(with: url)
+            DispatchQueue.main.async {
+                self.smokingAreas = areas
+            }
         } catch let error as SAError {
             dump(error)
         } catch {
