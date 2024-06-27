@@ -1,46 +1,51 @@
 //
-//  LocationManager.swift
+//  MapViewModel.swift
 //  SmokingAreaMap
 //
-//  Created by chaekie on 6/11/24.
+//  Created by chaekie on 6/27/24.
 //
 
 import CoreLocation
 import Foundation
 import KakaoMapsSDK
 
-class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
+class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
+    @Published var currentLocation = GeoCoordinate()
+    @Published var locationServiceAuthorized: CLAuthorizationStatus?
+    @Published var selectedSpot: SmokingArea?
+
+    private var locationManager: CLLocationManager
+    var currentPositionPoi: Poi?
 
     override init() {
         locationManager = CLLocationManager()
+        super.init()
+        setupLocationManager()
+    }
+
+    func setupLocationManager() {
         locationManager.distanceFilter = kCLDistanceFilterNone
         locationManager.headingFilter = kCLHeadingFilterNone
         locationManager.desiredAccuracy = kCLLocationAccuracyBest
-        currentLocation = GeoCoordinate()
-
-        super.init()
         locationManager.delegate = self
     }
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         currentLocation.longitude = locations[0].coordinate.longitude
         currentLocation.latitude = locations[0].coordinate.latitude
-
-        currentPositionPoi?
-            .moveAt(MapPoint(longitude: currentLocation.longitude, latitude: currentLocation.latitude), duration: 300)
+        currentPositionPoi?.moveAt(MapPoint(longitude: currentLocation.longitude, latitude: currentLocation.latitude), duration: 300)
     }
 
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
         locationServiceAuthorized = status
-
-        switch locationServiceAuthorized {
+        
+        switch status {
         case .authorizedAlways, .authorizedWhenInUse:
-                locationManager.startUpdatingHeading()
-                locationManager.startUpdatingLocation()
-                currentPositionPoi?.show()
+            locationManager.startUpdatingHeading()
+            locationManager.startUpdatingLocation()
+            currentPositionPoi?.show()
         case .restricted, .denied:
             currentPositionPoi?.hide()
-            print("Access to location data is not allowed")
         default:
             locationManager.requestWhenInUseAuthorization()
         }
@@ -49,9 +54,4 @@ class LocationManager: NSObject, CLLocationManagerDelegate, ObservableObject {
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print(#function, error)
     }
-
-    var currentLocation: GeoCoordinate
-    var currentPositionPoi: Poi?
-    var locationManager: CLLocationManager
-    var locationServiceAuthorized: CLAuthorizationStatus?
 }

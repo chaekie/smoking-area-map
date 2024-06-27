@@ -48,12 +48,24 @@ struct SmokingAreaData: Codable {
     }
 }
 
+/// SmokingArea Description
 struct SmokingArea: Codable {
+    /// 자치구
     let district: District
+
+    /// 건물 주소
     let address: String
+
+    /// 경도
     let longitude: Double
+
+    /// 위도
     let latitude: Double
+
+    /// 개방감 (개방형, 완전개방형)
     let roomType: RoomType
+
+    /// 실내외 구분 (실내, 실외)
     let space: Space
 }
 
