@@ -6,10 +6,9 @@
 //
 
 import SwiftUI
-//import Combine
 
 struct ContentView: View {
-    @StateObject private var viewModel = MapViewModel()
+    @ObservedObject private var viewModel = MapViewModel()
     @ObservedObject private var smokingAreaManager = SmokingAreaManager()
 
     @State private var isAppear = false
@@ -18,31 +17,36 @@ struct ContentView: View {
     @State private var isPoiInfoPresented = false
 
     var body: some View {
-            MapView(viewModel: viewModel,
-                    smokingAreaMananger: smokingAreaManager,
-                    isAppear: $isAppear,
-                    shouldMove: $shouldMove,
-                    onPoiTapped: onPoiTapped)
-            .onAppear() {
-                self.isAppear = true
-                Task {
-                    await smokingAreaManager.fetchSmokingArea(page: 1)
-                }
+        MapView(viewModel: viewModel,
+                smokingAreaMananger: smokingAreaManager,
+                isAppear: $isAppear,
+                shouldMove: $shouldMove,
+                onPoiTapped: onPoiTapped)
+        .onAppear() {
+            self.isAppear = true
+            Task {
+                await smokingAreaManager.fetchSmokingArea(page: 1)
             }
-            .onDisappear() {
-                self.isAppear = false
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .ignoresSafeArea()
-            .overlay(alignment: .bottomTrailing) {
-                buildPoi()
-                buildCurrentLocationButton()
-            }
+        }
+        .onDisappear() {
+            self.isAppear = false
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .ignoresSafeArea()
+        .overlay(alignment: .bottomTrailing) {
+            buildPoiSheetView()
+            buildCurrentLocationButton()
+        }
     }
 
-    private func buildPoi() -> some View {
+    private func buildPoiSheetView() -> some View {
         Button("") { }
-            .sheet(isPresented: $isPoiInfoPresented) {
+            .bottomSheet(
+                isPresented: $isPoiInfoPresented,
+                detents: [.custom(identifier: .customHeight, resolver: { _ in
+                    return 150
+                })]
+            ) {
                 VStack(alignment: .leading, spacing: 8) {
                     if let spot = viewModel.selectedSpot {
                         Text("위도: \(spot.latitude), 경도: \(spot.longitude)")
@@ -50,12 +54,14 @@ struct ContentView: View {
                         Text("실내외 구분: \(spot.space)")
                         Text("개방 형태: \(spot.roomType)")
                     }
-                }.presentationDetents([.height(150)])
+                }
             }
     }
 
     private func onPoiTapped() {
-        isPoiInfoPresented = true
+        if isPoiInfoPresented == false {
+            isPoiInfoPresented = true
+        }
     }
 
     private func buildCurrentLocationButton() -> some View {
@@ -88,14 +94,14 @@ struct ContentView: View {
         let isAuthorized = viewModel.locationServiceAuthorized == .authorizedWhenInUse || viewModel.locationServiceAuthorized == .authorizedAlways
         shouldMove = isAuthorized
         isLocationAlertPresented = !isAuthorized
-
+        
         DispatchQueue.main.async {
             shouldMove = false
         }
     }
 }
 
-#Preview {
-    ContentView()
-}
+//#Preview {
+//    ContentView()
+//}
 

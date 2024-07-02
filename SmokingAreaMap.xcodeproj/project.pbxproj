@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		512083842C2D095D00F12295 /* MapViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512083832C2D095D00F12295 /* MapViewModel.swift */; };
 		512083882C2D10CB00F12295 /* MapCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512083872C2D10CB00F12295 /* MapCoordinator.swift */; };
+		5120838C2C2E983500F12295 /* BottomSheetView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5120838B2C2E983500F12295 /* BottomSheetView.swift */; };
 		51263D332C16D2BD0009509F /* SmokingAreaMapApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51263D322C16D2BD0009509F /* SmokingAreaMapApp.swift */; };
 		51263D352C16D2BD0009509F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51263D342C16D2BD0009509F /* ContentView.swift */; };
 		51263D372C16D2BF0009509F /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 51263D362C16D2BF0009509F /* Assets.xcassets */; };
@@ -24,6 +25,7 @@
 /* Begin PBXFileReference section */
 		512083832C2D095D00F12295 /* MapViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapViewModel.swift; sourceTree = "<group>"; };
 		512083872C2D10CB00F12295 /* MapCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapCoordinator.swift; sourceTree = "<group>"; };
+		5120838B2C2E983500F12295 /* BottomSheetView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BottomSheetView.swift; sourceTree = "<group>"; };
 		51263D2F2C16D2BD0009509F /* SmokingAreaMap.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmokingAreaMap.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		51263D322C16D2BD0009509F /* SmokingAreaMapApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingAreaMapApp.swift; sourceTree = "<group>"; };
 		51263D342C16D2BD0009509F /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -104,6 +106,7 @@
 			isa = PBXGroup;
 			children = (
 				51263D4E2C1805880009509F /* MapView.swift */,
+				5120838B2C2E983500F12295 /* BottomSheetView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -196,6 +199,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				51263D352C16D2BD0009509F /* ContentView.swift in Sources */,
+				5120838C2C2E983500F12295 /* BottomSheetView.swift in Sources */,
 				512083882C2D10CB00F12295 /* MapCoordinator.swift in Sources */,
 				51263D4F2C1805880009509F /* MapView.swift in Sources */,
 				5177DF052C2A7B0F003D8701 /* ErrorKind.swift in Sources */,
