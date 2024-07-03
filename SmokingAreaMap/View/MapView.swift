@@ -12,11 +12,11 @@ import SwiftUI
 struct MapView: UIViewRepresentable {
     @ObservedObject var viewModel: MapViewModel
     @ObservedObject var smokingAreaMananger: SmokingAreaManager
-    
+
     @Binding var isAppear: Bool
     @Binding var shouldMove: Bool
     var onPoiTapped: () -> Void
-    
+
     static let mapViewName = "mainMap"
     @Environment(\.scenePhase) var scenePhase
 
@@ -41,11 +41,19 @@ struct MapView: UIViewRepresentable {
                 } else {
                     if controller.isEnginePrepared == false { controller.prepareEngine() }
                     if controller.isEngineActive == false { controller.activateEngine() }
-                    context.coordinator.setPois(smokingAreaMananger.smokingAreas)
+
+                    if controller.isEnginePrepared && controller.isEngineActive {
+                        let isSame = context.coordinator.cachedSmokingAreas.elementsEqual(smokingAreaMananger.smokingAreas)
+                        if !isSame {
+                            context.coordinator.setPois(smokingAreaMananger.smokingAreas)
+                            context.coordinator.cachedSmokingAreas = smokingAreaMananger.smokingAreas
+                        }
+                    }
                 }
             } else {
                 controller.pauseEngine()
                 controller.resetEngine()
+                context.coordinator.cachedSmokingAreas = []
             }
         }
     }

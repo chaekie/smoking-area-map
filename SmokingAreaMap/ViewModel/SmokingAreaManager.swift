@@ -5,7 +5,6 @@
 //  Created by chaekie on 6/24/24.
 //
 
-import Foundation
 import SwiftUI
 
 class SmokingAreaManager: ObservableObject {
@@ -15,13 +14,13 @@ class SmokingAreaManager: ObservableObject {
     @Published var smokingAreas = [SmokingArea]()
 
     func parseJSON(_ data: Data) throws -> [SmokingArea] {
-          do {
-              let decodedData = try JSONDecoder().decode(SmokingAreaDataResult.self, from: data)
-              return decodedData.data.map { $0.toSmokingArea() }
-          } catch {
-              throw SAError(.jsonDecodingFailed)
-          }
-      }
+        do {
+            let decodedData = try JSONDecoder().decode(SmokingAreaDataResult.self, from: data)
+            return decodedData.data.map { $0.toSmokingArea() }
+        } catch {
+            throw SAError(.jsonDecodingFailed)
+        }
+    }
 
     func performRequest(with url: URL) async throws -> [SmokingArea] {
         let (data, response) = try await URLSession.shared.data(from: url)

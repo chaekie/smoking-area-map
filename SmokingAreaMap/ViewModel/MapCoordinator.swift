@@ -13,6 +13,7 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
     var parent: MapView
     var controller: KMController?
     var auth: Bool
+    var cachedSmokingAreas: [SmokingArea]
 
     private let defaultPosition = MapPoint(longitude: 126.978365, latitude: 37.566691)
     private let spotPoiInfo = PoiInfo(layer: Layer(id: "spotLayer", zOrder: 10000),
@@ -22,6 +23,7 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
     init(parent: MapView) {
         self.parent = parent
         self.auth = false
+        self.cachedSmokingAreas = parent.smokingAreaMananger.smokingAreas
         super.init()
     }
 
@@ -36,19 +38,22 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
     }
 
     func addViewSucceeded(_ viewName: String, viewInfoName: String) {
-        setCurrentPosiotionPoi()
+        guard let view = controller?.getView(viewName) as? KakaoMap else { return }
+        createLabelLayer(view, poiInfo: spotPoiInfo)
+        createPoiStyle(view, poiInfo: spotPoiInfo)
+        setCurrentPosiotionPoi(view)
         moveToCurrentLocation()
     }
 
     func setPois(_ smokingAreas: [SmokingArea]) {
         guard let view = controller?.getView(MapView.mapViewName) as? KakaoMap else { return }
         let manager = view.getLabelManager()
-        if let _ = manager.getLabelLayer(layerID: "spotLayer") { return }
+        if let layer = manager.getLabelLayer(layerID: "spotLayer") {
+            layer.clearAllItems()
+        }
 
-        createLabelLayer(view: view, poiInfo: spotPoiInfo)
-        createPoiStyle(view: view, poiInfo: spotPoiInfo)
         smokingAreas.forEach { area in
-            let poi = createPois(view: view,
+            let poi = createPois(view,
                                  poiInfo: spotPoiInfo,
                                  location: GeoCoordinate(longitude: area.longitude, latitude: area.latitude))
             poi?.userObject = area as AnyObject
@@ -59,22 +64,20 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
 
     func poiTappedHandler(_ param: PoiInteractionEventParam) {
         guard let info = param.poiItem.userObject as? SmokingArea else { return }
-        dump(info)
         parent.viewModel.selectedSpot = info
         parent.onPoiTapped()
     }
 
-    private func setCurrentPosiotionPoi() {
-        guard let view = controller?.getView("mainMap") as? KakaoMap else { return }
+    private func setCurrentPosiotionPoi(_ view: KakaoMap) {
         let currentPoiInfo = PoiInfo(layer: Layer(id: "cpLayer", zOrder: 10001), style: Style(id: "cpPoiStyle", symbol: UIImage(named: "current_position")), rank: 10)
 
-        createLabelLayer(view: view, poiInfo: currentPoiInfo)
-        createPoiStyle(view: view, poiInfo: currentPoiInfo)
-        parent.viewModel.currentPositionPoi = createPois(view: view, poiInfo: currentPoiInfo, location: parent.viewModel.currentLocation)
+        createLabelLayer(view, poiInfo: currentPoiInfo)
+        createPoiStyle(view, poiInfo: currentPoiInfo)
+        parent.viewModel.currentPositionPoi = createPois(view, poiInfo: currentPoiInfo, location: parent.viewModel.currentLocation)
         parent.viewModel.currentPositionPoi?.show()
     }
 
-    private func createPois(view: KakaoMap, poiInfo: PoiInfo, location: GeoCoordinate) -> Poi? {
+    private func createPois(_ view: KakaoMap, poiInfo: PoiInfo, location: GeoCoordinate) -> Poi? {
         let manager = view.getLabelManager()
         let newLayer = manager.getLabelLayer(layerID: poiInfo.layer.id)
         let poiOption = PoiOptions(styleID: poiInfo.style.id)
@@ -84,13 +87,13 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
         return newLayer?.addPoi(option: poiOption, at: MapPoint(longitude: location.longitude, latitude: location.latitude))
     }
 
-    private func createLabelLayer(view: KakaoMap, poiInfo: PoiInfo) {
+    private func createLabelLayer(_ view: KakaoMap, poiInfo: PoiInfo) {
         let manager = view.getLabelManager()
         let layerOption = LabelLayerOptions(layerID: poiInfo.layer.id, competitionType: .none, competitionUnit: .poi, orderType: .rank, zOrder: poiInfo.layer.zOrder)
         let _ = manager.addLabelLayer(option: layerOption)
     }
 
-    private func createPoiStyle(view: KakaoMap, poiInfo: PoiInfo) {
+    private func createPoiStyle(_ view: KakaoMap, poiInfo: PoiInfo) {
         let manager = view.getLabelManager()
         let iconStyle = PoiIconStyle(symbol: poiInfo.style.symbol, anchorPoint: CGPoint(x: 0.0, y: 0.5))
         let perLevelStyle = PerLevelPoiStyle(iconStyle: iconStyle, level: 0)
@@ -111,7 +114,7 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
 
         let cameraUpdate = CameraUpdate.make(
             target: MapPoint(longitude: location.longitude, latitude: location.latitude),
-            zoomLevel: 18,
+            zoomLevel: 15,
             rotation: 0.0,
             tilt: 0.0,
             mapView: view

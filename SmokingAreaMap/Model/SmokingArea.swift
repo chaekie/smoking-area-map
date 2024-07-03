@@ -49,7 +49,7 @@ struct SmokingAreaData: Codable {
 }
 
 /// SmokingArea Description
-struct SmokingArea: Codable {
+struct SmokingArea: Codable, Equatable {
     /// 자치구
     let district: District
 

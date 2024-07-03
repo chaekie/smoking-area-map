@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @ObservedObject private var viewModel = MapViewModel()
+    @StateObject private var viewModel = MapViewModel()
     @ObservedObject private var smokingAreaManager = SmokingAreaManager()
 
     @State private var isAppear = false
