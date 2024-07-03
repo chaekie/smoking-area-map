@@ -7,7 +7,9 @@
 
 import SwiftUI
 
-struct BottomSheetView<Content: View>: UIViewRepresentable {
+struct BottomSheetView<Content: View>: UIViewControllerRepresentable {
+    typealias UIViewControllerType = UIHostingController<Content>
+
     @Binding var isPresented: Bool
     let detents: [UISheetPresentationController.Detent]
     let content: Content
@@ -22,34 +24,37 @@ struct BottomSheetView<Content: View>: UIViewRepresentable {
         self.content = content()
     }
 
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView()
-        return view
+    func makeUIViewController(context: Context) -> UIHostingController<Content> {
+        UIViewControllerType(rootView: content)
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {
-        guard let rootVC = uiView.window?.rootViewController else { return }
+    func updateUIViewController(_ hostingController: UIViewControllerType, context: Context) {
+        if isPresented == false {
+            context.coordinator.isStillPresenting = false
 
-        if rootVC.presentedViewController == nil && isPresented {
-            setUp(on: rootVC, context: context)
+        } else {
+            hostingController.rootView = content
+
+            if context.coordinator.isStillPresenting == false {
+                setUp(hostingController, context: context)
+                context.coordinator.isStillPresenting = true
+            }
         }
     }
 
-    func setUp(on rootVC: UIViewController, context: Context) {
+    func setUp(_ hostingController: UIViewControllerType, context: Context) {
         let vc = UIViewController()
-        let hc = UIHostingController(rootView: content)
+        vc.addChild(hostingController)
+        vc.view.addSubview(hostingController.view)
 
-        vc.addChild(hc)
-        vc.view.addSubview(hc.view)
-
-        hc.view.translatesAutoresizingMaskIntoConstraints = false
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            hc.view.leadingAnchor.constraint(equalTo: vc.view.leadingAnchor),
-            hc.view.topAnchor.constraint(equalTo: vc.view.topAnchor),
-            hc.view.trailingAnchor.constraint(equalTo: vc.view.trailingAnchor),
-            hc.view.bottomAnchor.constraint(equalTo: vc.view.bottomAnchor)
+            hostingController.view.leadingAnchor.constraint(equalTo: vc.view.leadingAnchor),
+            hostingController.view.topAnchor.constraint(equalTo: vc.view.topAnchor),
+            hostingController.view.trailingAnchor.constraint(equalTo: vc.view.trailingAnchor),
+            hostingController.view.bottomAnchor.constraint(equalTo: vc.view.bottomAnchor)
         ])
-        hc.didMove(toParent: vc)
+        hostingController.didMove(toParent: vc)
 
         if let sheetController = vc.presentationController as? UISheetPresentationController {
             sheetController.detents = detents
@@ -59,7 +64,7 @@ struct BottomSheetView<Content: View>: UIViewRepresentable {
         }
 
         vc.presentationController?.delegate = context.coordinator
-
+        guard let rootVC = UIApplication.shared.firstKeyWindow?.rootViewController else { return }
         rootVC.present(vc, animated: true)
     }
 
@@ -69,6 +74,7 @@ struct BottomSheetView<Content: View>: UIViewRepresentable {
 
     class Coordinator: NSObject, UISheetPresentationControllerDelegate {
         var parent: BottomSheetView
+        var isStillPresenting = false
 
         init(parent: BottomSheetView) {
             self.parent = parent
@@ -124,4 +130,13 @@ extension View {
 
 extension UISheetPresentationController.Detent.Identifier {
     static let customHeight = UISheetPresentationController.Detent.Identifier("customHeight")
+}
+
+extension UIApplication {
+    var firstKeyWindow: UIWindow? {
+        return UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .filter { $0.activationState == .foregroundActive }
+            .first?.keyWindow
+    }
 }
