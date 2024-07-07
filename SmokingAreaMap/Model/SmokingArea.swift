@@ -14,46 +14,98 @@ struct SmokingAreaDataResult: Codable {
 }
 
 struct SmokingAreaData: Codable {
-    let district: String
-    let address: String
-    let longitude: String
-    let latitude: String
-    let roomType: String
-    let space: String
+    let address1: String?
+    let address2: String?
+    let address3: String?
+    let address4: String?
+    let address5: String?
+    let address6: String?
+    let address7: String?
+    let address8: String?
+    let address9: String?
+    let address10: String?
+    let address11: String?
+    let address12: String?
+    let address13: String?
+
+    let longitude: String?
+    let latitude: String?
+
+    let roomType1: String?
+    let roomType2: String?
+    let roomType3: String?
 
     private enum CodingKeys : String, CodingKey {
-        case district = "자치구"
-        case address = "시설 구분"
+        case address1 = "서울특별시 용산구 설치 위치"
+        case address2 = "영업소소재지(도로 명)"
+        case address3 = "설치도로명주소"
+        case address4 = "도로명주소"
+        case address5 = "주소"
+        case address6 = "위치"
+        case address7 = "시설 구분"
+        case address8 = "설치 위치"
+        case address9 = "설치위치"
+        case address10 = "설치위치 상세"
+        case address11 = "건물명"
+        case address12 = "시설명(업소)"
+        case address13 = "시설명"
+
         case longitude = "경도"
         case latitude = "위도"
-        case roomType = "시설형태"
-        case space = "설치 위치"
+
+        case roomType1 = "시설형태"
+        case roomType2 = "흡연실 형태"
+        case roomType3 = "구분"
     }
 
-    func toSmokingArea() -> SmokingArea {
-        let districtEnum = District(rawValue: district) ?? .defaultValue
-        let roomTypeEnum = RoomType(rawValue: roomType) ?? .defaultValue
-        let spaceEnum = Space(rawValue: space) ?? .defaultValue
-        let longitudeDouble = Double(longitude) ?? 0.0
-        let latitudeDouble = Double(latitude) ?? 0.0
+    func getWholeAddress(from districtName: String) -> String {
+        var address = districtName
+
+        switch District(rawValue: address) {
+        case .yeongdeungpoGu:
+            address = ["서울특별시", districtName, address7].compactMap { $0 }.joined(separator: " ")
+            break
+        case .seongbukGu, .seodaemunGu, .yangcheonGu, .gwanakGu, .dongdaemunGu, .seochoGu, .gangseoGu:
+            address = ["서울특별시", districtName, address8, address9, address10].compactMap { $0 }.joined(separator: " ")
+            break
+        default: address = [address1, address2, address3, address4, address5, address6, address8, address9, address11, address12, address13].compactMap { $0 }.joined(separator: " ")
+        }
+        return address
+    }
+
+    func toSmokingArea(district: DistrictInfo) -> SmokingArea {
+        let addressString = getWholeAddress(from: district.name)
+        let roomTypeString = [roomType1, roomType2, roomType3].compactMap { $0 }.joined(separator: " ")
+
+
+        var longitudeDouble: Double = 0.0
+        var latitudeDouble: Double = 0.0
+
+
+        if let longitude = longitude {
+            longitudeDouble = Double(longitude) ?? 0.0
+        }
+        if let latitude = latitude {
+            latitudeDouble = Double(latitude) ?? 0.0
+        }
 
         return SmokingArea(
-            district: districtEnum,
-            address: address,
+            district: district,
+            address: addressString,
             longitude: longitudeDouble,
             latitude: latitudeDouble,
-            roomType: roomTypeEnum,
-            space: spaceEnum
+            roomType: roomTypeString
         )
     }
 }
 
 /// SmokingArea Description
 struct SmokingArea: Codable, Equatable {
-    /// 자치구
-    let district: District
 
-    /// 건물 주소
+    /// 자치구
+    let district: DistrictInfo
+
+    /// 주소
     let address: String
 
     /// 경도
@@ -62,27 +114,6 @@ struct SmokingArea: Codable, Equatable {
     /// 위도
     let latitude: Double
 
-    /// 개방감 (개방형, 완전개방형)
-    let roomType: RoomType
-
-    /// 실내외 구분 (실내, 실외)
-    let space: Space
-}
-
-enum Space: String, Codable {
-    case 실외, 미정
-
-    static let defaultValue: Space = .미정
-}
-
-enum RoomType: String, Codable {
-    case 개방형, 완전개방형, 미정
-
-    static let defaultValue: RoomType = .미정
-}
-
-enum District: String, Codable {
-    case 영등포구, 서울
-
-    static let defaultValue: District = .서울
+    /// 개방감
+    let roomType: String?
 }
