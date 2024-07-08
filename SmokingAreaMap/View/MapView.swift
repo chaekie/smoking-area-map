@@ -11,7 +11,7 @@ import SwiftUI
 
 struct MapView: UIViewRepresentable {
     @ObservedObject var viewModel: MapViewModel
-    @ObservedObject var smokingAreaMananger: SmokingAreaManager
+    @ObservedObject var smokingAreaMananger: SmokingAreaViewModel
 
     @Binding var isAppear: Bool
     @Binding var shouldMove: Bool

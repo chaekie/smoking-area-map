@@ -94,7 +94,7 @@ enum District: String, CaseIterable, Codable {
         case .dongdaemunGu: return "15070168"
         case .dobongGu: return ""
         case .dongjakGu: return "15049031"
-        case .seochoGu: return "15074379"
+        case .seochoGu: return "" //15074379
         case .seodaemunGu: return "15040413"
         case .seongdongGu: return "15029169"
         case .seongbukGu: return "15100203"
@@ -124,7 +124,7 @@ enum District: String, CaseIterable, Codable {
         case .dongdaemunGu: return "aef69bb4-d848-4088-9abd-f6e3dd361cfb"
         case .dobongGu: return ""
         case .dongjakGu: return "03e47093-48b5-442c-a6a5-bd756148f6ae"
-        case .seochoGu: return "16735cd3-6305-4539-b0b4-e92ad6653ec7"
+        case .seochoGu: return "" // 16735cd3-6305-4539-b0b4-e92ad6653ec7
         case .seodaemunGu: return "280fb8c7-7bd8-4633-896e-99a76d23d2de"
         case .seongdongGu: return "68c14d9d-6a3c-4cd6-9199-959ef803e3f3_201908021643"
         case .seongbukGu: return "b3a63072-4c2c-4f49-ba75-cd9ecb4ce0d7"

@@ -28,6 +28,8 @@ struct SmokingAreaData: Codable {
     let address12: String?
     let address13: String?
 
+    let businessType: String?
+
     let longitude: String?
     let latitude: String?
 
@@ -50,52 +52,14 @@ struct SmokingAreaData: Codable {
         case address12 = "시설명(업소)"
         case address13 = "시설명"
 
+        case businessType = "업종"
+
         case longitude = "경도"
         case latitude = "위도"
 
         case roomType1 = "시설형태"
         case roomType2 = "흡연실 형태"
         case roomType3 = "구분"
-    }
-
-    func getWholeAddress(from districtName: String) -> String {
-        var address = districtName
-
-        switch District(rawValue: address) {
-        case .yeongdeungpoGu:
-            address = ["서울특별시", districtName, address7].compactMap { $0 }.joined(separator: " ")
-            break
-        case .seongbukGu, .seodaemunGu, .yangcheonGu, .gwanakGu, .dongdaemunGu, .seochoGu, .gangseoGu:
-            address = ["서울특별시", districtName, address8, address9, address10].compactMap { $0 }.joined(separator: " ")
-            break
-        default: address = [address1, address2, address3, address4, address5, address6, address8, address9, address11, address12, address13].compactMap { $0 }.joined(separator: " ")
-        }
-        return address
-    }
-
-    func toSmokingArea(district: DistrictInfo) -> SmokingArea {
-        let addressString = getWholeAddress(from: district.name)
-        let roomTypeString = [roomType1, roomType2, roomType3].compactMap { $0 }.joined(separator: " ")
-
-
-        var longitudeDouble: Double = 0.0
-        var latitudeDouble: Double = 0.0
-
-
-        if let longitude = longitude {
-            longitudeDouble = Double(longitude) ?? 0.0
-        }
-        if let latitude = latitude {
-            latitudeDouble = Double(latitude) ?? 0.0
-        }
-
-        return SmokingArea(
-            district: district,
-            address: addressString,
-            longitude: longitudeDouble,
-            latitude: latitudeDouble,
-            roomType: roomTypeString
-        )
     }
 }
 
@@ -116,4 +80,24 @@ struct SmokingArea: Codable, Equatable {
 
     /// 개방감
     let roomType: String?
+}
+
+
+enum SearchType: String {
+    case address
+    case keyword
+}
+
+
+struct LocalDataResult: Codable {
+    let documents: [LocalData]
+}
+
+struct LocalData: Codable {
+    let longitude, latitude: String
+
+    enum CodingKeys: String, CodingKey {
+        case longitude = "x"
+        case latitude = "y"
+    }
 }
