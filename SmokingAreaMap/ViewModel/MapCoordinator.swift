@@ -15,15 +15,15 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
     var auth: Bool
     var cachedSmokingAreas: [SmokingArea]
 
-    private let defaultPosition = MapPoint(longitude: 126.978365, latitude: 37.566691)
+    private let defaultPosition = GeoCoordinate(longitude: 126.978365, latitude: 37.566691)
     private let spotPoiInfo = PoiInfo(layer: Layer(id: "spotLayer", zOrder: 10000),
                                       style: Style(id: "spotStyle", symbol: UIImage(named: "pin")),
-                              rank: 5)
+                                      rank: 5)
 
     init(parent: MapView) {
         self.parent = parent
         self.auth = false
-        self.cachedSmokingAreas = parent.smokingAreaMananger.smokingAreas
+        self.cachedSmokingAreas = parent.smokingAreaVM.smokingAreas
         super.init()
     }
 
@@ -33,7 +33,12 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
     }
 
     func addViews() {
-        let mapviewInfo = MapviewInfo(viewName: MapView.mapViewName, defaultPosition: defaultPosition)
+        let mapviewInfo = MapviewInfo(viewName: MapView.mapViewName,
+                                      defaultPosition: MapPoint(
+                                        longitude: defaultPosition.longitude,
+                                        latitude: defaultPosition.latitude
+                                      )
+        )
         controller?.addView(mapviewInfo)
     }
 
@@ -42,7 +47,20 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
         createLabelLayer(view, poiInfo: spotPoiInfo)
         createPoiStyle(view, poiInfo: spotPoiInfo)
         setCurrentPosiotionPoi(view)
-        moveToCurrentLocation()
+
+        if parent.mapVM.currentLocation.longitude == 0.0 && parent.mapVM.currentLocation.latitude == 0.0 {
+            moveCamera(to: defaultPosition)
+            parent.getSmokingAreasByLocation(
+                Coordinate(longitude: String(defaultPosition.longitude), latitude: String(defaultPosition.latitude))
+            )
+        } else {
+            moveToCurrentLocation()
+            parent.getSmokingAreasByLocation(
+                Coordinate(longitude: String(parent.mapVM.currentLocation.longitude),
+                           latitude: String(parent.mapVM.currentLocation.latitude)
+                          )
+            )
+        }
     }
 
     func setPois(_ smokingAreas: [SmokingArea]) {
@@ -64,7 +82,7 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
 
     func poiTappedHandler(_ param: PoiInteractionEventParam) {
         guard let info = param.poiItem.userObject as? SmokingArea else { return }
-        parent.viewModel.selectedSpot = info
+        parent.mapVM.selectedSpot = info
         parent.onPoiTapped()
     }
 
@@ -73,8 +91,8 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
 
         createLabelLayer(view, poiInfo: currentPoiInfo)
         createPoiStyle(view, poiInfo: currentPoiInfo)
-        parent.viewModel.currentPositionPoi = createPois(view, poiInfo: currentPoiInfo, location: parent.viewModel.currentLocation)
-        parent.viewModel.currentPositionPoi?.show()
+        parent.mapVM.currentPositionPoi = createPois(view, poiInfo: currentPoiInfo, location: parent.mapVM.currentLocation)
+        parent.mapVM.currentPositionPoi?.show()
     }
 
     private func createPois(_ view: KakaoMap, poiInfo: PoiInfo, location: GeoCoordinate) -> Poi? {
@@ -102,7 +120,7 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
     }
 
     func moveToCurrentLocation() {
-        moveCamera(to: parent.viewModel.currentLocation)
+        moveCamera(to: parent.mapVM.currentLocation)
     }
 
     private func moveToPoi(location: GeoCoordinate) {
@@ -165,7 +183,10 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
         let mapView = controller?.getView(MapView.mapViewName) as? KakaoMap
         mapView?.viewRect = CGRect(origin: CGPoint(x: 0.0, y: 0.0), size: size)
         if parent.isAppear {
-            let cameraUpdate = CameraUpdate.make(target: defaultPosition, mapView: mapView!)
+            let cameraUpdate = CameraUpdate.make(target: MapPoint(
+                longitude: defaultPosition.longitude,
+                latitude: defaultPosition.latitude
+            ), mapView: mapView!)
             mapView?.moveCamera(cameraUpdate)
             parent.isAppear = false
         }

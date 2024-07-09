@@ -19,6 +19,7 @@
 		51263D462C17F2B80009509F /* KakaoMapsSDK-SPM in Frameworks */ = {isa = PBXBuildFile; productRef = 51263D452C17F2B80009509F /* KakaoMapsSDK-SPM */; };
 		51263D4F2C1805880009509F /* MapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51263D4E2C1805880009509F /* MapView.swift */; };
 		513F45B72C3BDC7A00743318 /* +Sequence.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513F45B62C3BDC7A00743318 /* +Sequence.swift */; };
+		513F45B92C3CF4D400743318 /* KaKaoLocal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513F45B82C3CF4D400743318 /* KaKaoLocal.swift */; };
 		5177DEFD2C292BB9003D8701 /* SmokingAreaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */; };
 		5177DEFF2C292E77003D8701 /* SmokingArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFE2C292E77003D8701 /* SmokingArea.swift */; };
 		5177DF052C2A7B0F003D8701 /* ErrorKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DF042C2A7B0F003D8701 /* ErrorKind.swift */; };
@@ -39,6 +40,7 @@
 		51263D432C16E0C40009509F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		51263D4E2C1805880009509F /* MapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapView.swift; sourceTree = "<group>"; };
 		513F45B62C3BDC7A00743318 /* +Sequence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "+Sequence.swift"; sourceTree = "<group>"; };
+		513F45B82C3CF4D400743318 /* KaKaoLocal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KaKaoLocal.swift; sourceTree = "<group>"; };
 		5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingAreaViewModel.swift; sourceTree = "<group>"; };
 		5177DEFE2C292E77003D8701 /* SmokingArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingArea.swift; sourceTree = "<group>"; };
 		5177DF042C2A7B0F003D8701 /* ErrorKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorKind.swift; sourceTree = "<group>"; };
@@ -109,8 +111,9 @@
 		5177DF002C294D9E003D8701 /* Model */ = {
 			isa = PBXGroup;
 			children = (
-				5177DEFE2C292E77003D8701 /* SmokingArea.swift */,
 				512083912C37824C00F12295 /* District.swift */,
+				5177DEFE2C292E77003D8701 /* SmokingArea.swift */,
+				513F45B82C3CF4D400743318 /* KaKaoLocal.swift */,
 				5177DF042C2A7B0F003D8701 /* ErrorKind.swift */,
 			);
 			path = Model;
@@ -128,9 +131,9 @@
 		5177DF022C294DB2003D8701 /* ViewModel */ = {
 			isa = PBXGroup;
 			children = (
+				512083872C2D10CB00F12295 /* MapCoordinator.swift */,
 				512083832C2D095D00F12295 /* MapViewModel.swift */,
 				5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */,
-				512083872C2D10CB00F12295 /* MapCoordinator.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -213,6 +216,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				51263D352C16D2BD0009509F /* ContentView.swift in Sources */,
+				513F45B92C3CF4D400743318 /* KaKaoLocal.swift in Sources */,
 				5120838C2C2E983500F12295 /* BottomSheetView.swift in Sources */,
 				512083882C2D10CB00F12295 /* MapCoordinator.swift in Sources */,
 				51263D4F2C1805880009509F /* MapView.swift in Sources */,

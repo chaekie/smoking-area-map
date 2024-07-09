@@ -81,23 +81,3 @@ struct SmokingArea: Codable, Equatable {
     /// 개방감
     let roomType: String?
 }
-
-
-enum SearchType: String {
-    case address
-    case keyword
-}
-
-
-struct LocalDataResult: Codable {
-    let documents: [LocalData]
-}
-
-struct LocalData: Codable {
-    let longitude, latitude: String
-
-    enum CodingKeys: String, CodingKey {
-        case longitude = "x"
-        case latitude = "y"
-    }
-}

@@ -10,8 +10,8 @@ import KakaoMapsSDK
 import SwiftUI
 
 struct MapView: UIViewRepresentable {
-    @ObservedObject var viewModel: MapViewModel
-    @ObservedObject var smokingAreaMananger: SmokingAreaViewModel
+    @ObservedObject var mapVM: MapViewModel
+    @ObservedObject var smokingAreaVM: SmokingAreaViewModel
 
     @Binding var isAppear: Bool
     @Binding var shouldMove: Bool
@@ -43,10 +43,10 @@ struct MapView: UIViewRepresentable {
                     if controller.isEngineActive == false { controller.activateEngine() }
 
                     if controller.isEnginePrepared && controller.isEngineActive {
-                        let isSame = context.coordinator.cachedSmokingAreas.elementsEqual(smokingAreaMananger.smokingAreas)
+                        let isSame = context.coordinator.cachedSmokingAreas.elementsEqual(smokingAreaVM.smokingAreas)
                         if !isSame {
-                            context.coordinator.setPois(smokingAreaMananger.smokingAreas)
-                            context.coordinator.cachedSmokingAreas = smokingAreaMananger.smokingAreas
+                            context.coordinator.setPois(smokingAreaVM.smokingAreas)
+                            context.coordinator.cachedSmokingAreas = smokingAreaVM.smokingAreas
                         }
                     }
                 }
@@ -60,6 +60,16 @@ struct MapView: UIViewRepresentable {
 
     func makeCoordinator() -> MapCoordinator {
         MapCoordinator(parent: self)
+    }
+
+    func getSmokingAreasByLocation(_ location: Coordinate) {
+        Task {
+            guard let district = try await smokingAreaVM.getDistrict(
+                Coordinate(longitude: location.longitude, latitude: location.latitude)
+            ) else { return }
+
+            await smokingAreaVM.fetchSmokingArea(district: district, page: 1)
+        }
     }
 
     static func dismantleUIView(_ uiView: KMViewContainer, coordinator: MapCoordinator) {

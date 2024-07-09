@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var viewModel = MapViewModel()
-    @ObservedObject private var smokingAreaManager = SmokingAreaManager()
+    @StateObject private var mapVM = MapViewModel()
+    @ObservedObject private var smokingAreaVM = SmokingAreaViewModel()
 
     @State private var isAppear = false
     @State private var shouldMove = false
@@ -17,19 +17,21 @@ struct ContentView: View {
     @State private var isPoiInfoPresented = false
 
     var body: some View {
-        MapView(viewModel: viewModel,
-                smokingAreaMananger: smokingAreaManager,
+        MapView(mapVM: mapVM,
+                smokingAreaVM: smokingAreaVM,
                 isAppear: $isAppear,
                 shouldMove: $shouldMove,
                 onPoiTapped: onPoiTapped)
         .onAppear() {
             self.isAppear = true
-            Task {
-                await smokingAreaManager.fetchSmokingArea(page: 1)
-            }
         }
         .onDisappear() {
             self.isAppear = false
+        }
+        .onReceive(mapVM.$currentLocation) { newLocation in
+            if newLocation.latitude == 0.0 && newLocation.latitude == 0.0 {
+
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea()
@@ -48,11 +50,12 @@ struct ContentView: View {
                 })]
             ) {
                 VStack(alignment: .leading, spacing: 8) {
-                    if let spot = viewModel.selectedSpot {
+                    if let spot = mapVM.selectedSpot {
                         Text("위도: \(spot.latitude), 경도: \(spot.longitude)")
-                        Text("주소: \(spot.district) \(spot.address)")
-                        Text("실내외 구분: \(spot.space)")
-                        Text("개방 형태: \(spot.roomType)")
+                        Text("주소: \(spot.address)")
+                        if let roomType = spot.roomType {
+                            Text("개방 형태: \(roomType)")
+                        }
                     }
                 }
             }
@@ -91,10 +94,11 @@ struct ContentView: View {
     }
 
     private func moveToCurrentLocation() {
-        let isAuthorized = viewModel.locationServiceAuthorized == .authorizedWhenInUse || viewModel.locationServiceAuthorized == .authorizedAlways
+        let isAuthorized = (mapVM.locationServiceAuthorized == .authorizedWhenInUse
+                            || mapVM.locationServiceAuthorized == .authorizedAlways)
         shouldMove = isAuthorized
         isLocationAlertPresented = !isAuthorized
-        
+
         DispatchQueue.main.async {
             shouldMove = false
         }
@@ -104,4 +108,3 @@ struct ContentView: View {
 //#Preview {
 //    ContentView()
 //}
-

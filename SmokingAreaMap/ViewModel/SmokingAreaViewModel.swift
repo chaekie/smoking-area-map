@@ -13,19 +13,31 @@ class SmokingAreaViewModel: ObservableObject {
     private let openDataApiKey = Bundle.main.object(forInfoDictionaryKey: "OPEN_DATA_PORTAL_KEY") as? String
     private let kakaoApiKey = Bundle.main.object(forInfoDictionaryKey: "KAKAO_REST_API_KEY") as? String
 
-    //    private let districts = District.allCases
-    private let districts = [District.jungnangGu]
-        .filter { $0.code != "" }
-        .map { DistrictInfo(name: $0.name, code: $0.code, uuid: $0.uuid) }
-
     @Published var smokingAreas = [SmokingArea]()
 
-    func fetchAllDistricts() async {
-        Task {
-            await districts.asyncMap {
-                await fetchSmokingArea(district: $0, page: 1)
-            }
+    func getDistrict(_ coordinates: Coordinate) async throws -> DistrictInfo? {
+        guard let apiKey = kakaoApiKey else { return nil }
+
+        let urlString = "\(kakaoLocalBaseURL)geo/coord2regioncode.json?x=\(coordinates.longitude)&y=\(coordinates.latitude)"
+        guard let url = URL(string: urlString) else {
+            dump(SAError(.invalidUrl))
+            return nil
         }
+
+        var request = URLRequest(url: url)
+        request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
+        request.setValue("KakaoAK \(apiKey)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        try handleHTTPResponse(response)
+
+        let decodedData = try JSONDecoder().decode(LocalRegionDataResult.self, from: data)
+        let documents = decodedData.documents
+
+        if documents.isEmpty { return nil }
+        guard let region = District(rawValue: documents[0].gu) else { return nil }
+
+        return DistrictInfo(name: region.name, code: region.code, uuid: region.uuid)
     }
 
     func fetchSmokingArea(district: DistrictInfo, page: Int) async {
@@ -67,15 +79,17 @@ class SmokingAreaViewModel: ObservableObject {
 
         let roomTypeString = [data.roomType1, data.roomType2, data.roomType3].compactMap { $0 }.joined(separator: " ")
 
-        guard let coordinates = await checkCoordinates(data, address: addressString, district: district) else {
+        guard let coordinates = await checkCoordinates(data, address: addressString, district: district),
+            let longitude = Double(coordinates.longitude),
+            let latitude = Double(coordinates.latitude) else {
             return nil
         }
 
         return SmokingArea(
             district: district,
             address: addressString,
-            longitude: coordinates.longitude,
-            latitude: coordinates.latitude,
+            longitude: longitude,
+            latitude: latitude,
             roomType: roomTypeString.isEmpty ? nil : roomTypeString
         )
     }
@@ -112,26 +126,24 @@ class SmokingAreaViewModel: ObservableObject {
     }
 
 
-    func checkCoordinates(_ data: SmokingAreaData, address: String, district: DistrictInfo) async -> (longitude: Double, latitude: Double)? {
-        var coordinates: (longitude: Double, latitude: Double)?
-
-        if let longitude = Double(data.longitude ?? ""), let latitude = Double(data.latitude ?? "") {
-            coordinates = (longitude, latitude)
+    func checkCoordinates(_ data: SmokingAreaData, address: String, district: DistrictInfo) async -> Coordinate? {
+        if let longitude = data.longitude,
+           let latitude = data.latitude {
+            return Coordinate(longitude: longitude, latitude: latitude)
         } else {
             do {
-                let newGeoInfo = try await getGeoCoordinates(from: address, district: district)
-                if let newLongitude = Double(newGeoInfo.longitude ?? ""), let newLatitude = Double(newGeoInfo.latitude ?? "") {
-                    coordinates = (newLongitude, newLatitude)
+                if let newGeoInfo = try await getGeoCoordinates(from: address, district: district) {
+                    return Coordinate(longitude: newGeoInfo.longitude, latitude: newGeoInfo.latitude)
                 }
             } catch {
                 print(error)
             }
         }
 
-        return coordinates
+        return nil
     }
 
-    func getGeoCoordinates(from address: String, district: DistrictInfo) async throws -> (longitude: String?, latitude: String?) {
+    func getGeoCoordinates(from address: String, district: DistrictInfo) async throws -> Coordinate? {
         let filteredAddress = filterKeyword(from: address)
         var searchType: SearchType = .address
 
@@ -142,11 +154,11 @@ class SmokingAreaViewModel: ObservableObject {
             break
         }
 
-        guard let apiKey = kakaoApiKey else { return (longitude: nil, latitude: nil) }
+        guard let apiKey = kakaoApiKey else { return nil }
         let urlString = "\(kakaoLocalBaseURL)search/\(searchType).json?query=\(filteredAddress)&size=1"
         guard let url = URL(string: urlString) else {
             dump(SAError(.invalidUrl))
-            return (longitude: nil, latitude: nil)
+            return nil
         }
 
         var request = URLRequest(url: url)
@@ -156,14 +168,12 @@ class SmokingAreaViewModel: ObservableObject {
         let (data, response) = try await URLSession.shared.data(for: request)
         try handleHTTPResponse(response)
 
-        let decodedData = try JSONDecoder().decode(LocalDataResult.self, from: data)
+        let decodedData = try JSONDecoder().decode(LocalCoordDataResult.self, from: data)
         let documents = decodedData.documents
 
-        if documents.isEmpty {
-            return (longitude: nil, latitude: nil)
-        }
+        if documents.isEmpty { return nil }
 
-        return (longitude: documents[0].longitude, latitude: documents[0].latitude)
+        return Coordinate(longitude: documents[0].longitude, latitude: documents[0].latitude)
     }
 
     func filterKeyword(from str: String) -> String {
