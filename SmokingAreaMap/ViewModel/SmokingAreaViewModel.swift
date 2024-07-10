@@ -15,6 +15,7 @@ class SmokingAreaViewModel: ObservableObject {
     @Published var totalCount: Int = 0
     @Published var page = 1
     @Published var size = 20
+    @Published var isInSeoul = true
 
     func getDistrict(_ coordinates: Coordinate) async throws -> DistrictInfo? {
         let urlString = "\(kakaoLocalBaseURL)geo/coord2regioncode.json?x=\(coordinates.longitude)&y=\(coordinates.latitude)"
@@ -34,8 +35,20 @@ class SmokingAreaViewModel: ObservableObject {
         let documents = decodedData.documents
 
         if documents.isEmpty { return nil }
-        guard let region = District(rawValue: documents[0].gu) else { return nil }
+        guard let region = District(rawValue: documents[0].gu) else {
+            await MainActor.run { 
+                withAnimation(.easeIn(duration: 0.2)) {
+                    isInSeoul = false
+                }
+            }
+            return nil
+        }
 
+        await MainActor.run {
+            withAnimation(.easeIn(duration: 0.2)) {
+                isInSeoul = true
+            }
+        }
         return DistrictInfo(name: region.name, code: region.code, uuid: region.uuid)
     }
 

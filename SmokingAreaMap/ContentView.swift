@@ -35,14 +35,27 @@ struct ContentView: View {
             buildCurrentLocationButton()
         }
         .overlay(alignment: .top) {
-            if smokingAreaVM.totalCount > 0 {
-                if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
-                    buildLoadMoreButton()
-                } else {
-                    buildSearchHereButton()
+            if smokingAreaVM.isInSeoul {
+                if smokingAreaVM.totalCount > 0 {
+                    if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
+                        buildLoadMoreButton()
+                    } else {
+                        buildSearchHereButton()
+                    }
                 }
+            } else {
+                buildOutOfSeoulText()
             }
         }
+    }
+
+    private func buildOutOfSeoulText() -> some View {
+        Text("서울을 벗어났습니다")
+            .bold()
+            .foregroundStyle(.red)
+            .opacity(0.8)
+            .font(.callout)
+            .padding(.vertical, 8)
     }
 
     private func buildSearchHereButton() -> some View {
@@ -57,6 +70,7 @@ struct ContentView: View {
                 .font(.callout)
                 .padding(.vertical, 8)
                 .padding(.horizontal, 14)
+                .frame(minWidth: 115)
                 .background(
                     Capsule()
                         .fill(.white)
@@ -78,6 +92,7 @@ struct ContentView: View {
                 .font(.callout)
                 .padding(.vertical, 8)
                 .padding(.horizontal, 14)
+                .frame(minWidth: 115)
                 .background(
                     Capsule()
                         .fill(.white)

@@ -7,6 +7,7 @@
 
 import Foundation
 import KakaoMapsSDK
+import SwiftUI
 
 class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
 
@@ -188,7 +189,9 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
                     Coordinate(longitude: String(center.wgsCoord.longitude), latitude: String(center.wgsCoord.latitude))
                 ) else { return }
                 await MainActor.run {
-                    parent.mapVM.newDistrictValue = district
+                    withAnimation(.easeIn(duration: 0.2)) {
+                        parent.mapVM.newDistrictValue = district
+                    }
                 }
             }
         }
