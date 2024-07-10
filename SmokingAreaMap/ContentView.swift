@@ -14,7 +14,7 @@ struct ContentView: View {
     @State private var isAppear = false
     @State private var shouldMove = false
     @State private var isLocationAlertPresented = false
-    @State private var isPoiInfoPresented = false
+    @State private var isPoiModalPresented = false
 
     var body: some View {
         MapView(mapVM: mapVM,
@@ -28,23 +28,69 @@ struct ContentView: View {
         .onDisappear() {
             self.isAppear = false
         }
-        .onReceive(mapVM.$currentLocation) { newLocation in
-            if newLocation.latitude == 0.0 && newLocation.latitude == 0.0 {
-
-            }
-        }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea()
         .overlay(alignment: .bottomTrailing) {
             buildPoiSheetView()
             buildCurrentLocationButton()
         }
+        .overlay(alignment: .top) {
+            if smokingAreaVM.totalCount > 0 {
+                if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
+                    buildLoadMoreButton()
+                } else {
+                    buildSearchHereButton()
+                }
+            }
+        }
+    }
+
+    private func buildSearchHereButton() -> some View {
+        Button {
+            Task {
+                smokingAreaVM.page = 1
+                await smokingAreaVM.fetchSmokingArea(district: mapVM.newDistrictValue)
+                mapVM.oldDistrictValue = mapVM.newDistrictValue
+            }
+        } label: {
+            Text("\(mapVM.newDistrictValue.name) 검색")
+                .font(.callout)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 14)
+                .background(
+                    Capsule()
+                        .fill(.white)
+                        .shadow(color: .black.opacity(0.2), radius: 5)
+                )
+        }
+    }
+
+    private func buildLoadMoreButton() -> some View {
+        let totalPage = Int(ceil(Double(smokingAreaVM.totalCount)/Double(smokingAreaVM.size)))
+
+        return Button {
+            Task {
+                smokingAreaVM.page += 1
+                await smokingAreaVM.fetchSmokingArea(district: mapVM.newDistrictValue)
+            }
+        } label: {
+            Text("결과 더보기 \(smokingAreaVM.page)/ \(totalPage)")
+                .font(.callout)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 14)
+                .background(
+                    Capsule()
+                        .fill(.white)
+                        .shadow(color: .black.opacity(0.2), radius: 5)
+                )
+        }
+        .disabled(smokingAreaVM.page == totalPage)
     }
 
     private func buildPoiSheetView() -> some View {
         Button("") { }
             .bottomSheet(
-                isPresented: $isPoiInfoPresented,
+                isPresented: $isPoiModalPresented,
                 detents: [.custom(identifier: .customHeight, resolver: { _ in
                     return 150
                 })]
@@ -58,12 +104,13 @@ struct ContentView: View {
                         }
                     }
                 }
+                .padding(.horizontal)
             }
     }
 
     private func onPoiTapped() {
-        if isPoiInfoPresented == false {
-            isPoiInfoPresented = true
+        if isPoiModalPresented == false {
+            isPoiModalPresented = true
         }
     }
 
@@ -72,11 +119,11 @@ struct ContentView: View {
             moveToCurrentLocation()
         } label: {
             Image(systemName: "dot.scope")
-                .font(.title)
-                .padding(10)
+                .font(.title2)
+                .padding(15)
                 .background(Color.white)
                 .clipShape(Circle())
-                .shadow(radius: 5)
+                .shadow(color: .black.opacity(0.2), radius: 5)
                 .padding([.bottom, .trailing], 20)
         }
         .alert("위치 서비스 사용", isPresented: $isLocationAlertPresented) {
@@ -89,7 +136,7 @@ struct ContentView: View {
                 }
             }
         } message: {
-            Text("위치 서비스를 사용할 수 없습니다.\n기기의 \"설정 > 앱이름 > 위치\"에서\n위치 서비스를 켜주세요.")
+            Text("위치 서비스를 사용할 수 없습니다.\n기기의 \"설정 > \(Bundle.main.appName) > 위치\"에서\n위치 서비스를 켜주세요.")
         }
     }
 

@@ -10,14 +10,13 @@ import SwiftUI
 class SmokingAreaViewModel: ObservableObject {
     private let openDataBaseURL = "https://api.odcloud.kr/api/"
     private let kakaoLocalBaseURL = "https://dapi.kakao.com/v2/local/"
-    private let openDataApiKey = Bundle.main.object(forInfoDictionaryKey: "OPEN_DATA_PORTAL_KEY") as? String
-    private let kakaoApiKey = Bundle.main.object(forInfoDictionaryKey: "KAKAO_REST_API_KEY") as? String
 
     @Published var smokingAreas = [SmokingArea]()
+    @Published var totalCount: Int = 0
+    @Published var page = 1
+    @Published var size = 20
 
     func getDistrict(_ coordinates: Coordinate) async throws -> DistrictInfo? {
-        guard let apiKey = kakaoApiKey else { return nil }
-
         let urlString = "\(kakaoLocalBaseURL)geo/coord2regioncode.json?x=\(coordinates.longitude)&y=\(coordinates.latitude)"
         guard let url = URL(string: urlString) else {
             dump(SAError(.invalidUrl))
@@ -26,7 +25,7 @@ class SmokingAreaViewModel: ObservableObject {
 
         var request = URLRequest(url: url)
         request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-        request.setValue("KakaoAK \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("KakaoAK \(Bundle.main.kakaoRestApiKey)", forHTTPHeaderField: "Authorization")
 
         let (data, response) = try await URLSession.shared.data(for: request)
         try handleHTTPResponse(response)
@@ -40,9 +39,19 @@ class SmokingAreaViewModel: ObservableObject {
         return DistrictInfo(name: region.name, code: region.code, uuid: region.uuid)
     }
 
-    func fetchSmokingArea(district: DistrictInfo, page: Int) async {
-        guard let apiKey = openDataApiKey else { return }
-        let urlString = "\(openDataBaseURL)\(district.code)/v1/uddi:\(district.uuid)?page=\(page)&perPage=250&serviceKey=\(apiKey)"
+    func fetchSmokingArea(district: DistrictInfo) async {
+        if district.code == "" {
+            print("no \(district.name) data yet")
+            return
+        }
+
+        if district.name == "광진구" || district.name == "중랑구" {
+            await MainActor.run { size = 40 }
+        } else {
+            await MainActor.run { size = 20 }
+        }
+        
+        let urlString = "\(openDataBaseURL)\(district.code)/v1/uddi:\(district.uuid)?page=\(page)&perPage=\(size)&serviceKey=\(Bundle.main.openDataApiKey)"
         guard let url = URL(string: urlString) else {
             dump(SAError(.invalidUrl))
             return
@@ -51,7 +60,11 @@ class SmokingAreaViewModel: ObservableObject {
         do {
             let areas = try await performRequest(with: url, about: district)
             DispatchQueue.main.async {
-                self.smokingAreas = areas
+                if self.page <= 1 {
+                    self.smokingAreas = areas
+                } else {
+                    self.smokingAreas = self.smokingAreas + areas
+                }
             }
         } catch {
             handleRequestError(error)
@@ -67,6 +80,11 @@ class SmokingAreaViewModel: ObservableObject {
     func parseJSON(_ data: Data, district: DistrictInfo) async throws -> [SmokingArea] {
         do {
             let decodedData = try JSONDecoder().decode(SmokingAreaDataResult.self, from: data)
+            Task {
+                await MainActor.run {
+                    totalCount = decodedData.totalCount
+                }
+            }
             return await decodedData.data.asyncCompactMap { await toSmokingArea(from: $0, district: district) }
         } catch {
             throw SAError(.jsonDecodingFailed)
@@ -75,9 +93,8 @@ class SmokingAreaViewModel: ObservableObject {
 
     func toSmokingArea(from data: SmokingAreaData, district: DistrictInfo) async -> SmokingArea? {
         let addressString = getWholeAddress(from: data, type: district.name)
-        guard isLocationFit(data, addressString) else { return nil }
-
         let roomTypeString = [data.roomType1, data.roomType2, data.roomType3].compactMap { $0 }.joined(separator: " ")
+        guard isLocationFit(data, address: addressString, roomType: roomTypeString) else { return nil }
 
         guard let coordinates = await checkCoordinates(data, address: addressString, district: district),
             let longitude = Double(coordinates.longitude),
@@ -94,12 +111,12 @@ class SmokingAreaViewModel: ObservableObject {
         )
     }
 
-    func isLocationFit(_ data: SmokingAreaData, _ address: String) -> Bool {
+    func isLocationFit(_ data: SmokingAreaData, address: String, roomType: String) -> Bool {
         if let businessType = data.businessType {
             return businessType != "게임업소" && businessType != "체육시설업"
         }
 
-        return !address.contains("옥상") && !address.contains("지하")
+        return !address.contains("옥상") && !address.contains("지하") && !roomType.contains("당구장업") && !roomType.contains("목욕장업") && !roomType.contains("골프연습장업") && !roomType.contains("체력단련장업")
     }
 
     func getWholeAddress(from data: SmokingAreaData, type districtName: String) -> String {
@@ -111,7 +128,6 @@ class SmokingAreaViewModel: ObservableObject {
         case .dongdaemunGu,
              .gangseoGu,
              .gwanakGu,
-             .gwangjinGu,
              .seodaemunGu,
              .seochoGu,
              .seongbukGu,
@@ -154,7 +170,6 @@ class SmokingAreaViewModel: ObservableObject {
             break
         }
 
-        guard let apiKey = kakaoApiKey else { return nil }
         let urlString = "\(kakaoLocalBaseURL)search/\(searchType).json?query=\(filteredAddress)&size=1"
         guard let url = URL(string: urlString) else {
             dump(SAError(.invalidUrl))
@@ -163,7 +178,7 @@ class SmokingAreaViewModel: ObservableObject {
 
         var request = URLRequest(url: url)
         request.setValue("application/json;charset=UTF-8", forHTTPHeaderField: "Content-Type")
-        request.setValue("KakaoAK \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("KakaoAK \(Bundle.main.kakaoRestApiKey)", forHTTPHeaderField: "Authorization")
 
         let (data, response) = try await URLSession.shared.data(for: request)
         try handleHTTPResponse(response)

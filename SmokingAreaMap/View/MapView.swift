@@ -15,6 +15,7 @@ struct MapView: UIViewRepresentable {
 
     @Binding var isAppear: Bool
     @Binding var shouldMove: Bool
+    
     var onPoiTapped: () -> Void
 
     static let mapViewName = "mainMap"
@@ -60,16 +61,6 @@ struct MapView: UIViewRepresentable {
 
     func makeCoordinator() -> MapCoordinator {
         MapCoordinator(parent: self)
-    }
-
-    func getSmokingAreasByLocation(_ location: Coordinate) {
-        Task {
-            guard let district = try await smokingAreaVM.getDistrict(
-                Coordinate(longitude: location.longitude, latitude: location.latitude)
-            ) else { return }
-
-            await smokingAreaVM.fetchSmokingArea(district: district, page: 1)
-        }
     }
 
     static func dismantleUIView(_ uiView: KMViewContainer, coordinator: MapCoordinator) {

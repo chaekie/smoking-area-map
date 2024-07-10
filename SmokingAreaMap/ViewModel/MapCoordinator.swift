@@ -15,6 +15,9 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
     var auth: Bool
     var cachedSmokingAreas: [SmokingArea]
 
+    var cameraStoppedHandler: DisposableEventHandler?
+    var cameraStartHandler: DisposableEventHandler?
+
     private let defaultPosition = GeoCoordinate(longitude: 126.978365, latitude: 37.566691)
     private let spotPoiInfo = PoiInfo(layer: Layer(id: "spotLayer", zOrder: 10000),
                                       style: Style(id: "spotStyle", symbol: UIImage(named: "pin")),
@@ -47,19 +50,35 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
         createLabelLayer(view, poiInfo: spotPoiInfo)
         createPoiStyle(view, poiInfo: spotPoiInfo)
         setCurrentPosiotionPoi(view)
+        setUpCamera(view)
+    }
+
+    func setUpCamera(_ view: KakaoMap) {
+        cameraStartHandler = view.addCameraWillMovedEventHandler(target: self, handler: MapCoordinator.onCameraWillMove)
+        cameraStoppedHandler = view.addCameraStoppedEventHandler(target: self, handler: MapCoordinator.onCameraStopped)
 
         if parent.mapVM.currentLocation.longitude == 0.0 && parent.mapVM.currentLocation.latitude == 0.0 {
             moveCamera(to: defaultPosition)
-            parent.getSmokingAreasByLocation(
-                Coordinate(longitude: String(defaultPosition.longitude), latitude: String(defaultPosition.latitude))
-            )
+            Task { try await setUpFirstDistrict(defaultPosition) }
         } else {
             moveToCurrentLocation()
-            parent.getSmokingAreasByLocation(
-                Coordinate(longitude: String(parent.mapVM.currentLocation.longitude),
-                           latitude: String(parent.mapVM.currentLocation.latitude)
-                          )
-            )
+            Task { try await setUpFirstDistrict(parent.mapVM.currentLocation) }
+        }
+    }
+
+    func setUpFirstDistrict(_ coord: GeoCoordinate) async throws {
+        do {
+            guard let district = try await parent.smokingAreaVM.getDistrict(
+                Coordinate(longitude: String(coord.longitude), latitude: String(coord.latitude))
+            ) else { return }
+
+            await parent.smokingAreaVM.fetchSmokingArea(district: district)
+            await MainActor.run {
+                parent.mapVM.oldDistrictValue = district
+                parent.mapVM.newDistrictValue = district
+            }
+        } catch {
+            print(error)
         }
     }
 
@@ -142,6 +161,37 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
             cameraUpdate: cameraUpdate,
             options: CameraAnimationOptions(autoElevation: false, consecutive: true, durationInMillis: 300)
         )
+    }
+
+    func onCameraWillMove(_ param: CameraActionEventParam) {
+        switch param.by {
+        case .doubleTapZoomIn: print("move by: doubleTapZoomIn")
+        case .twoFingerTapZoomOut: print("move by: twoFingerTapZoomOut")
+        case .pan: print("move by: pan")
+        case .rotate: print("move by: rotate")
+        case .zoom: print("move by: zoom")
+        case .tilt: print("move by: tilt")
+        case .longTapAndDrag: print("move by: longTapAndDrag")
+        case .rotateZoom: print("move by: rotateZoom")
+        case .oneFingerZoom: print("move by: oneFingerZoom")
+        case .notUserAction: print("move by: notUserAction")
+        @unknown default: print("move by: default")
+        }
+    }
+
+    func onCameraStopped(_ param: CameraActionEventParam) {
+        if param.by != .notUserAction {
+            guard let view = param.view as? KakaoMap else { return }
+            let center = view.getPosition(CGPoint(x: view.viewRect.size.width * 0.5, y: view.viewRect.size.height * 0.5))
+            Task {
+                guard let district = try await parent.smokingAreaVM.getDistrict(
+                    Coordinate(longitude: String(center.wgsCoord.longitude), latitude: String(center.wgsCoord.latitude))
+                ) else { return }
+                await MainActor.run {
+                    parent.mapVM.newDistrictValue = district
+                }
+            }
+        }
     }
 
     func authenticationSucceeded() {

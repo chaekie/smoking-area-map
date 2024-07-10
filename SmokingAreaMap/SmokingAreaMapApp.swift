@@ -13,9 +13,7 @@ struct SmokingAreaMapApp: App {
 
     init() {
         guard let infoDic = Bundle.main.infoDictionary else { return }
-        if let kakaoKey = infoDic["KAKAO_NATIVE_APP_KEY"] as? String {
-            SDKInitializer.InitSDK(appKey: kakaoKey)
-        }
+        SDKInitializer.InitSDK(appKey: Bundle.main.kakaoNativeApiKey)
      }
 
     var body: some Scene {
