@@ -30,7 +30,7 @@ struct MapView: UIViewRepresentable {
 
     func updateUIView(_ uiView: KMViewContainer, context: Self.Context) {
         if isAppear && shouldMove {
-            context.coordinator.moveToCurrentLocation()
+            context.coordinator.moveCamera(to: mapVM.currentLocation)
             return
         }
 

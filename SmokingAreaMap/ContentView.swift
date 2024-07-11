@@ -35,16 +35,14 @@ struct ContentView: View {
             buildCurrentLocationButton()
         }
         .overlay(alignment: .top) {
-            if mapVM.oldDistrictValue.name != "" {
-                if smokingAreaVM.isInSeoul {
-                    if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
-                        buildLoadMoreButton()
-                    } else {
-                        buildSearchHereButton()
-                    }
-                } else {
-                    buildOutOfSeoulText()
-                }
+            if mapVM.oldDistrictValue.name.isEmpty {
+                EmptyView()
+            } else if !smokingAreaVM.isInSeoul {
+                buildOutOfSeoulText()
+            } else if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
+                buildLoadMoreButton()
+            } else {
+                buildSearchHereButton()
             }
         }
     }

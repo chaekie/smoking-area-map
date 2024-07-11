@@ -9,6 +9,7 @@ import CoreLocation
 import Foundation
 import KakaoMapsSDK
 
+final
 class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var currentLocation = GeoCoordinate()
     @Published var cameraLocation = GeoCoordinate()

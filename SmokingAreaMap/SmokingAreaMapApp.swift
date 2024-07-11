@@ -12,7 +12,6 @@ import KakaoMapsSDK
 struct SmokingAreaMapApp: App {
 
     init() {
-        guard let infoDic = Bundle.main.infoDictionary else { return }
         SDKInitializer.InitSDK(appKey: Bundle.main.kakaoNativeApiKey)
      }
 

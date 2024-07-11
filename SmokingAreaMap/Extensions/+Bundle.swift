@@ -9,7 +9,7 @@ import Foundation
 
 extension Bundle {
     var appName: String {
-        guard let name = infoDictionary?["CFBundleName"] as? String else { return "" }
+        guard let name = infoDictionary?["CFBundleDisplayName"] as? String else { return "" }
         return name
     }
 

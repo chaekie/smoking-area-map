@@ -9,6 +9,7 @@ import Foundation
 import KakaoMapsSDK
 import SwiftUI
 
+final
 class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
 
     var parent: MapView
@@ -23,6 +24,8 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
     private let spotPoiInfo = PoiInfo(layer: Layer(id: "spotLayer", zOrder: 10000),
                                       style: Style(id: "spotStyle", symbol: UIImage(named: "pin")),
                                       rank: 5)
+    private let polygonLayerID = "seoulPolygonLayer"
+    private let polygonStyleID = "seoulPolygonLayer"
 
     init(parent: MapView) {
         self.parent = parent
@@ -48,41 +51,58 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
 
     func addViewSucceeded(_ viewName: String, viewInfoName: String) {
         guard let view = controller?.getView(viewName) as? KakaoMap else { return }
-        createLabelLayer(view, poiInfo: spotPoiInfo)
-        createPoiStyle(view, poiInfo: spotPoiInfo)
-        createPolygonStyleSet()
-        createMapPolygonShape()
-        setCurrentPosiotionPoi(view)
+        let labelManager = view.getLabelManager()
+        let shapeManager = view.getShapeManager()
+
+        createLabelLayer(labelManager, poiInfo: spotPoiInfo)
+        createPoiStyle(labelManager, poiInfo: spotPoiInfo)
+        setCurrentPosiotionPoi(labelManager)
+
+        createPolygonStyleSet(shapeManager, styleID: polygonStyleID)
+        let polygonData = getDistrictPolygonData()
+        polygonData.forEach { polygon in
+            createMapPolygonShape(shapeManager, polygon: polygon, layerID: polygonLayerID, styleID: polygonStyleID)
+        }
+
         setUpCamera(view)
     }
 
-    func setUpCamera(_ view: KakaoMap) {
-        cameraStartHandler = view.addCameraWillMovedEventHandler(target: self, handler: MapCoordinator.onCameraWillMove)
-        cameraStoppedHandler = view.addCameraStoppedEventHandler(target: self, handler: MapCoordinator.onCameraStopped)
-
-        if parent.mapVM.currentLocation.longitude == 0.0 && parent.mapVM.currentLocation.latitude == 0.0 {
-            moveCamera(to: defaultPosition)
-            Task { try await setUpFirstDistrict(defaultPosition) }
-        } else {
-            moveToCurrentLocation()
-            Task { try await setUpFirstDistrict(parent.mapVM.currentLocation) }
-        }
+    private func createLabelLayer(_ manager: LabelManager, poiInfo: PoiInfo) {
+        let layerOption = LabelLayerOptions(
+            layerID: poiInfo.layer.id,
+            competitionType: .none,
+            competitionUnit: .poi,
+            orderType: .rank,
+            zOrder: poiInfo.layer.zOrder
+        )
+        let _ = manager.addLabelLayer(option: layerOption)
     }
 
-    func setUpFirstDistrict(_ coord: GeoCoordinate) async throws {
-        do {
-            guard let district = try await parent.smokingAreaVM.getDistrict(
-                Coordinate(longitude: String(coord.longitude), latitude: String(coord.latitude))
-            ) else { return }
+    private func createPoiStyle(_ manager: LabelManager, poiInfo: PoiInfo) {
+        let iconStyle = PoiIconStyle(symbol: poiInfo.style.symbol, anchorPoint: CGPoint(x: 0.0, y: 0.5))
+        let perLevelStyle = PerLevelPoiStyle(iconStyle: iconStyle, level: 0)
+        let poiStyle = PoiStyle(styleID: poiInfo.style.id, styles: [perLevelStyle])
+        manager.addPoiStyle(poiStyle)
+    }
 
-            await parent.smokingAreaVM.fetchSmokingArea(district: district)
-            await MainActor.run {
-                parent.mapVM.oldDistrictValue = district
-                parent.mapVM.newDistrictValue = district
-            }
-        } catch {
-            print(error)
-        }
+    private func setCurrentPosiotionPoi(_ manager: LabelManager) {
+        let currentPoiInfo = PoiInfo(layer: Layer(id: "cpLayer", zOrder: 10001),
+                                     style: Style(id: "cpPoiStyle", symbol: UIImage(named: "current_position")),
+                                     rank: 10)
+
+        createLabelLayer(manager, poiInfo: currentPoiInfo)
+        createPoiStyle(manager, poiInfo: currentPoiInfo)
+        parent.mapVM.currentPositionPoi = createPois(manager, poiInfo: currentPoiInfo, location: parent.mapVM.currentLocation)
+        parent.mapVM.currentPositionPoi?.show()
+    }
+
+    private func createPois(_ manager: LabelManager, poiInfo: PoiInfo, location: GeoCoordinate) -> Poi? {
+        let newLayer = manager.getLabelLayer(layerID: poiInfo.layer.id)
+        let poiOption = PoiOptions(styleID: poiInfo.style.id)
+        poiOption.clickable = true
+        poiOption.rank = poiInfo.rank
+
+        return newLayer?.addPoi(option: poiOption, at: MapPoint(longitude: location.longitude, latitude: location.latitude))
     }
 
     func setPois(_ smokingAreas: [SmokingArea]) {
@@ -93,7 +113,7 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
         }
 
         smokingAreas.forEach { area in
-            let poi = createPois(view,
+            let poi = createPois(manager,
                                  poiInfo: spotPoiInfo,
                                  location: GeoCoordinate(longitude: area.longitude, latitude: area.latitude))
             poi?.userObject = area as AnyObject
@@ -108,48 +128,58 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
         parent.onPoiTapped()
     }
 
-    private func setCurrentPosiotionPoi(_ view: KakaoMap) {
-        let currentPoiInfo = PoiInfo(layer: Layer(id: "cpLayer", zOrder: 10001), style: Style(id: "cpPoiStyle", symbol: UIImage(named: "current_position")), rank: 10)
+    private func createPolygonStyleSet(_ manager: ShapeManager, styleID: String) {
+        let farStyle = PerLevelPolygonStyle(color: UIColor(red: 0.5, green: 0.6, blue: 0.9, alpha: 0.8),
+                                            strokeWidth: 2,
+                                            strokeColor: UIColor.systemBlue, level: 0)
+        let closeStyle = PerLevelPolygonStyle(color: UIColor(red: 0.5, green: 0.6, blue: 0.9, alpha: 0.2),
+                                              strokeWidth: 2,
+                                              strokeColor: UIColor.systemBlue, level: 14)
 
-        createLabelLayer(view, poiInfo: currentPoiInfo)
-        createPoiStyle(view, poiInfo: currentPoiInfo)
-        parent.mapVM.currentPositionPoi = createPois(view, poiInfo: currentPoiInfo, location: parent.mapVM.currentLocation)
-        parent.mapVM.currentPositionPoi?.show()
+        let polygonStyle = PolygonStyle(styles: [farStyle, closeStyle])
+        let styleSet = PolygonStyleSet(styleSetID: styleID, styles: [polygonStyle])
+
+        manager.addPolygonStyleSet(styleSet)
     }
 
-    private func createPois(_ view: KakaoMap, poiInfo: PoiInfo, location: GeoCoordinate) -> Poi? {
-        let manager = view.getLabelManager()
-        let newLayer = manager.getLabelLayer(layerID: poiInfo.layer.id)
-        let poiOption = PoiOptions(styleID: poiInfo.style.id)
-        poiOption.clickable = true
-        poiOption.rank = poiInfo.rank
-
-        return newLayer?.addPoi(option: poiOption, at: MapPoint(longitude: location.longitude, latitude: location.latitude))
+    private func getDistrictPolygonData() -> [Feature] {
+        do {
+            guard let polygonJSON = NSDataAsset(name: "SeoulPolygon") else { return [] }
+            let polygonData = try JSONDecoder().decode(SeoulPolygonDataResult.self, from: polygonJSON.data)
+            return polygonData.features
+        } catch {
+            dump(SAError(.jsonDecodingFailed))
+        }
+        return []
     }
 
-    private func createLabelLayer(_ view: KakaoMap, poiInfo: PoiInfo) {
-        let manager = view.getLabelManager()
-        let layerOption = LabelLayerOptions(layerID: poiInfo.layer.id, competitionType: .none, competitionUnit: .poi, orderType: .rank, zOrder: poiInfo.layer.zOrder)
-        let _ = manager.addLabelLayer(option: layerOption)
+    private func createMapPolygonShape(_ manager: ShapeManager, polygon: Feature, layerID: String, styleID: String) {
+        let layer = manager.addShapeLayer(layerID: layerID, zOrder: 10001)
+        let options = MapPolygonShapeOptions(shapeID: polygon.properties.name, styleID: styleID, zOrder: 1)
+        let mapPointPolygonData = polygon.geometry.coordinates.map {
+            $0.map { MapPoint(longitude: $0[0], latitude: $0[1]) }
+        }
+        let polygons = mapPointPolygonData.map { MapPolygon(exteriorRing: $0, hole: nil, styleIndex: 0) }
+        polygons.forEach { polygon in
+            options.polygons.append(polygon)
+        }
+        _ = layer?.addMapPolygonShape(options)
     }
 
-    private func createPoiStyle(_ view: KakaoMap, poiInfo: PoiInfo) {
-        let manager = view.getLabelManager()
-        let iconStyle = PoiIconStyle(symbol: poiInfo.style.symbol, anchorPoint: CGPoint(x: 0.0, y: 0.5))
-        let perLevelStyle = PerLevelPoiStyle(iconStyle: iconStyle, level: 0)
-        let poiStyle = PoiStyle(styleID: poiInfo.style.id, styles: [perLevelStyle])
-        manager.addPoiStyle(poiStyle)
+    private func setUpCamera(_ view: KakaoMap) {
+        if parent.mapVM.currentLocation.longitude == 0.0 && parent.mapVM.currentLocation.latitude == 0.0 {
+            moveCamera(to: defaultPosition)
+            setUpFirstDistrict(defaultPosition)
+        } else {
+            moveCamera(to: parent.mapVM.currentLocation)
+            setUpFirstDistrict(parent.mapVM.currentLocation)
+        }
+
+        cameraStartHandler = view.addCameraWillMovedEventHandler(target: self, handler: MapCoordinator.onCameraWillMove)
+        cameraStoppedHandler = view.addCameraStoppedEventHandler(target: self, handler: MapCoordinator.onCameraStopped)
     }
 
-    func moveToCurrentLocation() {
-        moveCamera(to: parent.mapVM.currentLocation)
-    }
-
-    private func moveToPoi(location: GeoCoordinate) {
-        moveCamera(to: location)
-    }
-
-    private func moveCamera(to location: GeoCoordinate) {
+    func moveCamera(to location: GeoCoordinate) {
         guard let view = controller?.getView(MapView.mapViewName) as? KakaoMap else { return }
 
         let cameraUpdate = CameraUpdate.make(
@@ -164,6 +194,20 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
             cameraUpdate: cameraUpdate,
             options: CameraAnimationOptions(autoElevation: false, consecutive: true, durationInMillis: 300)
         )
+    }
+
+    private func setUpFirstDistrict(_ coord: GeoCoordinate) {
+        Task {
+            guard let district = await parent.smokingAreaVM.getDistrict(
+                by: Coordinate(longitude: String(coord.longitude), latitude: String(coord.latitude))
+            ) else { return }
+
+            await parent.smokingAreaVM.fetchSmokingArea(district: district)
+            await MainActor.run {
+                parent.mapVM.oldDistrictValue = district
+                parent.mapVM.newDistrictValue = district
+            }
+        }
     }
 
     func onCameraWillMove(_ param: CameraActionEventParam) {
@@ -185,68 +229,33 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
     func onCameraStopped(_ param: CameraActionEventParam) {
         guard let view = param.view as? KakaoMap else { return }
         let center = view.getPosition(CGPoint(x: view.viewRect.size.width * 0.5, y: view.viewRect.size.height * 0.5))
+
         Task {
-            guard let district = try await parent.smokingAreaVM.getDistrict(
-                Coordinate(longitude: String(center.wgsCoord.longitude), latitude: String(center.wgsCoord.latitude))
-            ) else { 
-                updateFocusedPolygon(district: nil)
+            guard let district = await parent.smokingAreaVM.getDistrict(
+                by: Coordinate(longitude: String(center.wgsCoord.longitude), latitude: String(center.wgsCoord.latitude))
+            ) else {
+                updateFocusedPolygon(view, district: nil)
                 return
             }
 
             await MainActor.run {
                 withAnimation(.easeIn(duration: 0.2)) {
-                    updateFocusedPolygon(district: district)
+                    updateFocusedPolygon(view, district: district)
                     parent.mapVM.newDistrictValue = district
                 }
             }
         }
     }
 
-    func createPolygonStyleSet() {
-        guard let view = controller?.getView(MapView.mapViewName) as? KakaoMap else { return }
+    private func updateFocusedPolygon(_ view: KakaoMap, district: DistrictInfo?) {
         let manager = view.getShapeManager()
-
-        let farStyle = PerLevelPolygonStyle(color: UIColor(red: 0.5, green: 0.6, blue: 0.9, alpha: 0.8), strokeWidth: 2, strokeColor: UIColor.systemBlue, level: 0)
-        let closeStyle = PerLevelPolygonStyle(color: UIColor(red: 0.5, green: 0.6, blue: 0.9, alpha: 0.2), strokeWidth: 2, strokeColor: UIColor.systemBlue, level: 14)
-
-        let polygonStyle = PolygonStyle(styles: [farStyle, closeStyle])
-        let styleSet = PolygonStyleSet(styleSetID: "polygonStyle", styles: [polygonStyle])
-
-        manager.addPolygonStyleSet(styleSet)
-    }
-
-    func createMapPolygonShape() {
-        guard let view = controller?.getView(MapView.mapViewName) as? KakaoMap else { return }
-        let manager = view.getShapeManager()
-        let layer = manager.addShapeLayer(layerID: "polygon", zOrder: 10001)
-
-        do {
-            guard let polygonJSON = NSDataAsset(name: "SeoulPolygon") else { return }
-            let polygonData = try JSONDecoder().decode(SeoulPolygonDataResult.self, from: polygonJSON.data)
-            for feature in polygonData.features {
-                let options = MapPolygonShapeOptions(shapeID: feature.properties.name, styleID: "polygonStyle", zOrder: 1)
-                let mapPointPolygonData = feature.geometry.coordinates.map { $0.map { MapPoint(longitude: $0[0], latitude: $0[1]) } }
-                let polygons = mapPointPolygonData.map { MapPolygon(exteriorRing: $0, hole: nil, styleIndex: 0) }
-                polygons.forEach { polygon in
-                    options.polygons.append(polygon)
-                }
-                _ = layer?.addMapPolygonShape(options)
-            }
-        } catch {
-            print(error)
-        }
-    }
-
-    func updateFocusedPolygon(district: DistrictInfo?) {
-        guard let view = controller?.getView(MapView.mapViewName) as? KakaoMap else { return }
-        let manager = view.getShapeManager()
-        let layer = manager.getShapeLayer(layerID: "polygon")
+        let layer = manager.getShapeLayer(layerID: polygonLayerID)
 
         guard let district else {
             layer?.hideAllPolygonShapes()
             return
         }
-        
+
         if parent.mapVM.oldDistrictValue.name == "" || parent.mapVM.oldDistrictValue.name == district.name {
             layer?.hideAllPolygonShapes()
         } else if parent.mapVM.oldDistrictValue.name != district.name {
@@ -260,7 +269,7 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
     func hideAllPolygons() {
         guard let view = controller?.getView(MapView.mapViewName) as? KakaoMap else { return }
         let manager = view.getShapeManager()
-        let layer = manager.getShapeLayer(layerID: "polygon")
+        let layer = manager.getShapeLayer(layerID: polygonLayerID)
         layer?.hideAllPolygonShapes()
     }
 
