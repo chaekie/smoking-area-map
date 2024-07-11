@@ -35,16 +35,16 @@ struct ContentView: View {
             buildCurrentLocationButton()
         }
         .overlay(alignment: .top) {
-            if smokingAreaVM.isInSeoul {
-                if smokingAreaVM.totalCount > 0 {
+            if mapVM.oldDistrictValue.name != "" {
+                if smokingAreaVM.isInSeoul {
                     if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
                         buildLoadMoreButton()
                     } else {
                         buildSearchHereButton()
                     }
+                } else {
+                    buildOutOfSeoulText()
                 }
-            } else {
-                buildOutOfSeoulText()
             }
         }
     }
@@ -99,7 +99,7 @@ struct ContentView: View {
                         .shadow(color: .black.opacity(0.2), radius: 5)
                 )
         }
-        .disabled(smokingAreaVM.page == totalPage)
+        .disabled(smokingAreaVM.page == totalPage || smokingAreaVM.totalCount == 0)
     }
 
     private func buildPoiSheetView() -> some View {

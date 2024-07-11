@@ -107,7 +107,7 @@ enum District: String, CaseIterable, Codable {
         case .jungnangGu: return "15040636"
         }
     }
-    
+
     var uuid: String {
         switch self {
         case .gangnamGu: return ""
@@ -138,5 +138,28 @@ enum District: String, CaseIterable, Codable {
         }
     }
 }
+
+
+struct SeoulPolygonDataResult: Codable {
+    let features: [Feature]
+}
+
+struct Feature: Codable {
+    let geometry: Geometry
+    let properties: FeatureProperties
+}
+
+struct Geometry: Codable {
+    let coordinates: [[[Double]]]
+}
+
+struct FeatureProperties: Codable {
+    let name: String
+
+    enum CodingKeys: String, CodingKey {
+        case name = "SIG_KOR_NM"
+    }
+}
+
 
 

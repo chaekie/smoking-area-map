@@ -55,6 +55,11 @@ class SmokingAreaViewModel: ObservableObject {
     func fetchSmokingArea(district: DistrictInfo) async {
         if district.code == "" {
             print("no \(district.name) data yet")
+            DispatchQueue.main.async {
+                self.page = 0
+                self.totalCount = 0
+                self.smokingAreas = []
+            }
             return
         }
 

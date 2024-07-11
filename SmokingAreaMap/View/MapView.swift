@@ -49,6 +49,9 @@ struct MapView: UIViewRepresentable {
                             context.coordinator.setPois(smokingAreaVM.smokingAreas)
                             context.coordinator.cachedSmokingAreas = smokingAreaVM.smokingAreas
                         }
+                        if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
+                            context.coordinator.hideAllPolygons()
+                        }
                     }
                 }
             } else {
