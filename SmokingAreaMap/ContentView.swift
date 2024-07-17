@@ -16,35 +16,45 @@ struct ContentView: View {
     @State private var isLocationAlertPresented = false
     @State private var isPoiModalPresented = false
 
+    @State private var isMyAreaPresented = false
+
     var body: some View {
-        MapView(mapVM: mapVM,
-                smokingAreaVM: smokingAreaVM,
-                isAppear: $isAppear,
-                shouldMove: $shouldMove,
-                onPoiTapped: onPoiTapped)
-        .onAppear() {
-            self.isAppear = true
-        }
-        .onDisappear() {
-            self.isAppear = false
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ignoresSafeArea()
-        .overlay(alignment: .bottomTrailing) {
-            buildPoiSheetView()
-            buildCurrentLocationButton()
-        }
-        .overlay(alignment: .top) {
-            if mapVM.oldDistrictValue.name.isEmpty {
-                EmptyView()
-            } else if !smokingAreaVM.isInSeoul {
-                buildOutOfSeoulText()
-            } else if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
-                buildLoadMoreButton()
-            } else {
-                buildSearchHereButton()
+        NavigationStack {
+            MapView(mapVM: mapVM,
+                    smokingAreaVM: smokingAreaVM,
+                    isAppear: $isAppear,
+                    shouldMove: $shouldMove,
+                    onPoiTapped: onPoiTapped)
+            .onAppear() {
+                self.isAppear = true
+            }
+            .onDisappear() {
+                self.isAppear = false
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .ignoresSafeArea()
+            .overlay(alignment: .bottomTrailing) {
+                buildPoiSheetView()
+                buildCurrentLocationButton()
+            }
+            .overlay(alignment: .top) {
+                if mapVM.oldDistrictValue.name.isEmpty {
+                    EmptyView()
+                } else if !smokingAreaVM.isInSeoul {
+                    buildOutOfSeoulText()
+                } else if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
+                    buildLoadMoreButton()
+                } else {
+                    buildSearchHereButton()
+                }
+            }
+            .toolbar {
+                NavigationLink(destination: MySpotsView()) {
+                    Label("내 장소 보기", systemImage: "list.bullet")
+                }
             }
         }
+
     }
 
     private func buildOutOfSeoulText() -> some View {

@@ -24,6 +24,13 @@
 		5177DEFD2C292BB9003D8701 /* SmokingAreaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */; };
 		5177DEFF2C292E77003D8701 /* SmokingArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFE2C292E77003D8701 /* SmokingArea.swift */; };
 		5177DF052C2A7B0F003D8701 /* ErrorKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DF042C2A7B0F003D8701 /* ErrorKind.swift */; };
+		51D2DBCE2C4501C30019D4B1 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBCD2C4501C30019D4B1 /* PersistenceController.swift */; };
+		51D2DBD02C450A920019D4B1 /* MySpotsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBCF2C450A920019D4B1 /* MySpotsView.swift */; };
+		51D2DBD22C461F6E0019D4B1 /* MySpotViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBD12C461F6E0019D4B1 /* MySpotViewModel.swift */; };
+		51D2DBD52C4658940019D4B1 /* CoreData.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBD32C4658940019D4B1 /* CoreData.xcdatamodeld */; };
+		51D2DBD72C46ADC60019D4B1 /* MySpotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBD62C46ADC60019D4B1 /* MySpotView.swift */; };
+		51D2DBD92C46B44C0019D4B1 /* MySpotsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBD82C46B44C0019D4B1 /* MySpotsViewModel.swift */; };
+		51D2DBDB2C4777C10019D4B1 /* DeferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBDA2C4777C00019D4B1 /* DeferView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +53,13 @@
 		5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingAreaViewModel.swift; sourceTree = "<group>"; };
 		5177DEFE2C292E77003D8701 /* SmokingArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingArea.swift; sourceTree = "<group>"; };
 		5177DF042C2A7B0F003D8701 /* ErrorKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorKind.swift; sourceTree = "<group>"; };
+		51D2DBCD2C4501C30019D4B1 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		51D2DBCF2C450A920019D4B1 /* MySpotsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MySpotsView.swift; sourceTree = "<group>"; };
+		51D2DBD12C461F6E0019D4B1 /* MySpotViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MySpotViewModel.swift; sourceTree = "<group>"; };
+		51D2DBD42C4658940019D4B1 /* CoreData.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = CoreData.xcdatamodel; sourceTree = "<group>"; };
+		51D2DBD62C46ADC60019D4B1 /* MySpotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MySpotView.swift; sourceTree = "<group>"; };
+		51D2DBD82C46B44C0019D4B1 /* MySpotsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MySpotsViewModel.swift; sourceTree = "<group>"; };
+		51D2DBDA2C4777C00019D4B1 /* DeferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeferView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,6 +104,7 @@
 				51263D382C16D2BF0009509F /* Preview Content */,
 				51263D362C16D2BF0009509F /* Assets.xcassets */,
 				51263D432C16E0C40009509F /* Info.plist */,
+				51D2DBD32C4658940019D4B1 /* CoreData.xcdatamodeld */,
 			);
 			path = SmokingAreaMap;
 			sourceTree = "<group>";
@@ -127,6 +142,9 @@
 			children = (
 				51263D4E2C1805880009509F /* MapView.swift */,
 				5120838B2C2E983500F12295 /* BottomSheetView.swift */,
+				51D2DBCF2C450A920019D4B1 /* MySpotsView.swift */,
+				51D2DBD62C46ADC60019D4B1 /* MySpotView.swift */,
+				51D2DBDA2C4777C00019D4B1 /* DeferView.swift */,
 			);
 			path = View;
 			sourceTree = "<group>";
@@ -137,6 +155,9 @@
 				512083872C2D10CB00F12295 /* MapCoordinator.swift */,
 				512083832C2D095D00F12295 /* MapViewModel.swift */,
 				5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */,
+				51D2DBCD2C4501C30019D4B1 /* PersistenceController.swift */,
+				51D2DBD82C46B44C0019D4B1 /* MySpotsViewModel.swift */,
+				51D2DBD12C461F6E0019D4B1 /* MySpotViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -223,14 +244,21 @@
 				5120838C2C2E983500F12295 /* BottomSheetView.swift in Sources */,
 				512083882C2D10CB00F12295 /* MapCoordinator.swift in Sources */,
 				51263D4F2C1805880009509F /* MapView.swift in Sources */,
+				51D2DBD52C4658940019D4B1 /* CoreData.xcdatamodeld in Sources */,
 				513F45BB2C3E39A400743318 /* +Bundle.swift in Sources */,
 				5177DF052C2A7B0F003D8701 /* ErrorKind.swift in Sources */,
+				51D2DBD72C46ADC60019D4B1 /* MySpotView.swift in Sources */,
 				5177DEFF2C292E77003D8701 /* SmokingArea.swift in Sources */,
+				51D2DBCE2C4501C30019D4B1 /* PersistenceController.swift in Sources */,
 				5177DEFD2C292BB9003D8701 /* SmokingAreaViewModel.swift in Sources */,
+				51D2DBD02C450A920019D4B1 /* MySpotsView.swift in Sources */,
+				51D2DBD22C461F6E0019D4B1 /* MySpotViewModel.swift in Sources */,
 				512083922C37824C00F12295 /* District.swift in Sources */,
 				513F45B72C3BDC7A00743318 /* +Sequence.swift in Sources */,
 				51263D332C16D2BD0009509F /* SmokingAreaMapApp.swift in Sources */,
 				512083842C2D095D00F12295 /* MapViewModel.swift in Sources */,
+				51D2DBD92C46B44C0019D4B1 /* MySpotsViewModel.swift in Sources */,
+				51D2DBDB2C4777C10019D4B1 /* DeferView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -467,6 +495,20 @@
 			productName = "KakaoMapsSDK-SPM";
 		};
 /* End XCSwiftPackageProductDependency section */
+
+/* Begin XCVersionGroup section */
+		51D2DBD32C4658940019D4B1 /* CoreData.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				51D2DBD42C4658940019D4B1 /* CoreData.xcdatamodel */,
+			);
+			currentVersion = 51D2DBD42C4658940019D4B1 /* CoreData.xcdatamodel */;
+			name = CoreData.xcdatamodeld;
+			path = /Users/chaekie/Swift/SmokingAreaMap/SmokingAreaMap/CoreData.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 51263D272C16D2BD0009509F /* Project object */;
 }
