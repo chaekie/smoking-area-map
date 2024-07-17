@@ -20,7 +20,7 @@ class PersistenceController {
 
         container.loadPersistentStores { description, error in
             if let error {
-                print("Could not load Core Data persistence stores.", error.localizedDescription)
+                dump(SAError(.CoreDataSettingError, description: error.localizedDescription))
                 fatalError()
             }
         }
@@ -33,7 +33,7 @@ class PersistenceController {
             do {
                 try context.save()
             } catch {
-                print("Could not save changes to Core Data.", error.localizedDescription)
+                dump(SAError(.CoreDataSaveError))
             }
         }
     }
@@ -56,7 +56,7 @@ class PersistenceController {
         do {
             results = try container.viewContext.fetch(request)
         } catch {
-            print("Could not fetch notes from Core Data.")
+            dump(SAError(.CoreDateFetchError))
         }
 
         return results
