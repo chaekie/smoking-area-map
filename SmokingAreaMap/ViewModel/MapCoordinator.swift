@@ -154,7 +154,10 @@ class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
     }
 
     private func createMapPolygonShape(_ manager: ShapeManager, polygon: Feature, layerID: String, styleID: String) {
-        let layer = manager.addShapeLayer(layerID: layerID, zOrder: 10001)
+        var layer = manager.getShapeLayer(layerID: layerID)
+        if layer == nil {
+            layer = manager.addShapeLayer(layerID: layerID, zOrder: 10001)
+        }
         let options = MapPolygonShapeOptions(shapeID: polygon.properties.name, styleID: styleID, zOrder: 1)
         let mapPointPolygonData = polygon.geometry.coordinates.map {
             $0.map { MapPoint(longitude: $0[0], latitude: $0[1]) }
