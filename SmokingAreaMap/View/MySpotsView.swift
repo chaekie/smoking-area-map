@@ -11,15 +11,22 @@ struct MySpotsView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject var vm = MySpotsViewModel()
     @State private var isPresented = false
-    @State private var isCreated: Bool? = nil
+    @State private var isCreatingNew: Bool? = nil
 
     var body: some View {
-        NavigationStack {
-            List(vm.spots, id: \.id) { spot in
-                NavigationLink(
-                    destination: DeferView(MySpotView(spot: spot))
-                ) {
-                    buildSpotRow(spot)
+            VStack {
+                if isCreatingNew == true {
+                    fullScreenProgressView()
+                } else if vm.spots.isEmpty {
+                    emptySpotView()
+                } else {
+                    List(vm.spots, id: \.id) { spot in
+                        NavigationLink(
+                            destination: DeferView(MySpotView(spot: spot))
+                        ) {
+                            buildSpotRow(spot)
+                        }
+                    }
                 }
             }
             .navigationTitle("내 장소 보기")
@@ -34,25 +41,55 @@ struct MySpotsView: View {
                 }
             }
             .sheet(isPresented: $isPresented, onDismiss: {
-                if isCreated != nil {
+                if isCreatingNew != nil {
                     vm.getAllSpot()
                 }
-                isCreated = nil
+                isCreatingNew = nil
             }) {
-                MySpotView(isCreated: $isCreated)
+                MySpotView(isCreatingNew: $isCreatingNew)
             }
-        }
-
     }
 
-    func buildSpotRow(_ spot: Spot) -> some View {
+    func emptySpotView() -> some View {
+        CenterContainerView {
+            Text("등록된 내 장소가 없습니다.\n+ 버튼을 눌러 나만의 흡연구역을 등록하세요.")
+                .multilineTextAlignment(.center)
+                .foregroundStyle(.gray)
+                .font(.callout)
+        }
+    }
+
+    func fullScreenProgressView() -> some View {
+        CenterContainerView {
+            ProgressView()
+        }
+    }
+
+    func buildSpotRow(_ spot: MySpot) -> some View {
         HStack {
             VStack {
-                Text(spot.name ?? "")
-                Text(spot.address ?? "")
+                Text(spot.name)
+                Text(spot.address)
             }
             Spacer()
         }
+    }
+}
+
+struct CenterContainerView<Content: View>: View {
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack {
+            Spacer()
+            HStack {
+                Spacer()
+                content
+                Spacer()
+            }
+            Spacer()
+        }
+        .background(Color(UIColor.secondarySystemBackground))
     }
 }
 
