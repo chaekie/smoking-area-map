@@ -10,7 +10,7 @@ import Foundation
 
 final class MySpotsViewModel: ObservableObject {
     let dataService = PersistenceController.shared
-    @Published var spots: [Spot] = []
+    @Published var spots: [MySpot] = []
 
     func getAllSpot() {
         spots = dataService.read()

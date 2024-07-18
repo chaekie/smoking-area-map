@@ -12,8 +12,8 @@ class PersistenceController {
     let container: NSPersistentContainer
 
     init(inMemory: Bool = false) {
-        container = NSPersistentContainer(name: "CoreData")
-        
+        container = NSPersistentContainer(name: "MySpot")
+
         if inMemory {
             container.persistentStoreDescriptions.first?.url = URL(fileURLWithPath: "/dev/null")
         }
@@ -38,18 +38,25 @@ class PersistenceController {
         }
     }
 
-    func create(name: String, address: String) {
-        let entity = Spot(context: container.viewContext)
+    func create(name: String,
+                address: String,
+                longitude: Double,
+                latitude: Double,
+                photo: Data) {
+        let entity = MySpot(context: container.viewContext)
         entity.id = UUID()
+        entity.createdAt = Date()
         entity.name = name
         entity.address = address
-        entity.createdAt = Date()
+        entity.longitude = longitude
+        entity.latitude = latitude
+        entity.photo = photo
         saveChanges()
     }
 
-    func read() -> [Spot] {
-        var results: [Spot] = []
-        let request = NSFetchRequest<Spot>(entityName: "Spot")
+    func read() -> [MySpot] {
+        var results: [MySpot] = []
+        let request = NSFetchRequest<MySpot>(entityName: "MySpot")
         let sort = NSSortDescriptor(key: "createdAt", ascending: false)
         request.sortDescriptors = [sort]
 
@@ -62,15 +69,36 @@ class PersistenceController {
         return results
     }
 
-    func update(entity: Spot, name: String? = nil, address: String? = nil) {
+    func update(entity: MySpot,
+                name: String? = nil,
+                address: String? = nil,
+                longitude: Double? = nil,
+                latitude: Double? = nil,
+                photo: Data? = nil) {
         var hasChanges: Bool = false
 
-        if name != nil {
+        if let name {
             entity.name = name
             hasChanges = true
         }
-        if address != nil {
+        
+        if let address {
             entity.address = address
+            hasChanges = true
+        }
+
+        if let longitude {
+            entity.longitude = longitude
+            hasChanges = true
+        }
+
+        if let latitude {
+            entity.latitude = latitude
+            hasChanges = true
+        }
+
+        if let photo {
+            entity.photo = photo
             hasChanges = true
         }
 
@@ -79,7 +107,7 @@ class PersistenceController {
         }
     }
 
-    func delete(_ entity: Spot) {
+    func delete(_ entity: MySpot) {
         container.viewContext.delete(entity)
         saveChanges()
     }
