@@ -75,14 +75,10 @@ struct MySpotView: View {
     func buildInputView() -> some View {
         Section {
             TextField("장소명", text: $vm.name)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
                 .submitLabel(.next)
                 .onSubmit { isAddressFocused = true }
 
             TextField("주소", text: $vm.address)
-                .autocorrectionDisabled()
-                .textInputAutocapitalization(.never)
                 .submitLabel(.next)
                 .focused($isAddressFocused)
                 .onSubmit { isLongitudeFocused = true }

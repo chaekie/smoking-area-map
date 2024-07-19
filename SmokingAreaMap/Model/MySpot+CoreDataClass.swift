@@ -10,6 +10,6 @@ import Foundation
 import CoreData
 
 
-public class MySpot: NSManagedObject {
+public class MySpot: NSManagedObject, SpotPoi {
 
 }

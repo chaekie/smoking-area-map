@@ -7,16 +7,30 @@
 
 import SwiftUI
 
-final
-class SmokingAreaViewModel: ObservableObject {
+final class SmokingAreaViewModel: ObservableObject {
     private let openDataBaseURL = "https://api.odcloud.kr/api/"
     private let kakaoLocalBaseURL = "https://dapi.kakao.com/v2/local/"
 
-    @Published var smokingAreas = [SmokingArea]()
+    let dataService = PersistenceController.shared
+
+    @Published var isSmokingAreasUpdated = false
+    @Published var smokingAreas: [SmokingArea] = [] {
+        didSet { isSmokingAreasUpdated = true }
+    }
+
+    @Published var isMySpotUpdated = false
+    @Published var mySpots: [MySpot] = [] {
+        didSet { isMySpotUpdated = true }
+    }
+
     @Published var totalCount = 0
     @Published var page = 1
     @Published var size = 20
     @Published var isInSeoul = true
+
+    func getAllSpot() {
+        mySpots = dataService.read()
+    }
 
     func fetchSmokingArea(district: DistrictInfo) async {
         if district.code.isEmpty {

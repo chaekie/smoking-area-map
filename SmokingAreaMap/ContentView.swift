@@ -16,8 +16,6 @@ struct ContentView: View {
     @State private var isLocationAlertPresented = false
     @State private var isPoiModalPresented = false
 
-    @State private var isMyAreaPresented = false
-
     var body: some View {
         NavigationStack {
             MapView(mapVM: mapVM,
@@ -27,6 +25,7 @@ struct ContentView: View {
                     onPoiTapped: onPoiTapped)
             .onAppear() {
                 self.isAppear = true
+                smokingAreaVM.getAllSpot()
             }
             .onDisappear() {
                 self.isAppear = false
@@ -122,9 +121,17 @@ struct ContentView: View {
                     if let spot = mapVM.selectedSpot {
                         Text("위도: \(spot.latitude), 경도: \(spot.longitude)")
                         Text("주소: \(spot.address)")
-                        if let roomType = spot.roomType {
-                            Text("개방 형태: \(roomType)")
+
+                        if let spot = spot as? SmokingArea {
+                            if let roomType = spot.roomType {
+                                Text("개방 형태: \(roomType)")
+                            }
                         }
+
+                        if let spot = spot as? MySpot {
+                            Text("장소명: \(spot.name)")
+                        }
+
                     }
                 }
                 .padding(.horizontal)
@@ -174,7 +181,3 @@ struct ContentView: View {
         }
     }
 }
-
-//#Preview {
-//    ContentView()
-//}

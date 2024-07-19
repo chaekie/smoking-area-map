@@ -29,12 +29,14 @@ struct MapView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: KMViewContainer, context: Self.Context) {
+        let coordinator = context.coordinator
+        guard let controller = coordinator.controller else { return }
+
         if isAppear && shouldMove {
-            context.coordinator.moveCamera(to: mapVM.currentLocation)
+            coordinator.moveCamera(to: mapVM.currentLocation)
             return
         }
 
-        guard let controller = context.coordinator.controller else { return }
         DispatchQueue.main.async {
             if isAppear {
                 if scenePhase == .background || scenePhase == .inactive {
@@ -44,21 +46,31 @@ struct MapView: UIViewRepresentable {
                     if controller.isEngineActive == false { controller.activateEngine() }
 
                     if controller.isEnginePrepared && controller.isEngineActive {
-                        let isSame = context.coordinator.cachedSmokingAreas.elementsEqual(smokingAreaVM.smokingAreas)
-                        if !isSame {
-                            context.coordinator.setPois(smokingAreaVM.smokingAreas)
-                            context.coordinator.cachedSmokingAreas = smokingAreaVM.smokingAreas
-                        }
+                        updateSmokingAreasPoi(coordinator)
+                        updateMySpotsPoi(coordinator)
+
                         if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
-                            context.coordinator.hideAllPolygons()
+                            coordinator.hideAllPolygons()
                         }
                     }
                 }
             } else {
                 controller.pauseEngine()
-                controller.resetEngine()
-                context.coordinator.cachedSmokingAreas = []
             }
+        }
+    }
+
+    private func updateSmokingAreasPoi(_ coordinator: Coordinator) {
+        if smokingAreaVM.isSmokingAreasUpdated {
+            coordinator.setPois(smokingAreaVM.smokingAreas, poiInfo: coordinator.spotPoiInfo)
+            smokingAreaVM.isSmokingAreasUpdated = false
+        }
+    }
+
+    private func updateMySpotsPoi(_ coordinator: Coordinator) {
+        if smokingAreaVM.isMySpotUpdated {
+            coordinator.setPois(smokingAreaVM.mySpots, poiInfo: coordinator.mySpotPoiInfo)
+            smokingAreaVM.isMySpotUpdated = false
         }
     }
 

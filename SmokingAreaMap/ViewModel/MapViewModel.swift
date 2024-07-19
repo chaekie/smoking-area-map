@@ -9,14 +9,13 @@ import CoreLocation
 import Foundation
 import KakaoMapsSDK
 
-final
-class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
+final class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var currentLocation = GeoCoordinate()
     @Published var cameraLocation = GeoCoordinate()
     @Published var oldDistrictValue = DistrictInfo(name: "", code: "", uuid: "")
     @Published var newDistrictValue = DistrictInfo(name: "", code: "", uuid: "")
     @Published var locationServiceAuthorized: CLAuthorizationStatus?
-    @Published var selectedSpot: SmokingArea?
+    @Published var selectedSpot: SpotPoi?
 
     private var locationManager: CLLocationManager
     var currentPositionPoi: Poi?

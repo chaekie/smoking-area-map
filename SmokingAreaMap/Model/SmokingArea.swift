@@ -64,7 +64,7 @@ struct SmokingAreaData: Codable {
 }
 
 /// SmokingArea Description
-struct SmokingArea: Codable, Equatable {
+struct SmokingArea: Codable, Equatable, SpotPoi {
 
     /// 자치구
     let district: DistrictInfo
