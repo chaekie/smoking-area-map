@@ -251,4 +251,21 @@ final class SmokingAreaViewModel: ObservableObject {
         return nil
     }
 
+    func getRoadAddress(by coordinates: Coordinate) async -> String {
+        let urlString = "\(kakaoLocalBaseURL)geo/coord2address.json?x=\(coordinates.longitude)&y=\(coordinates.latitude)"
+
+        do {
+            let data = try await getKakaoApiData(urlString: urlString)
+            let decodedData = try JSONDecoder().decode(LocalAddressDataResult.self, from: data)
+            let documents = decodedData.documents
+            if documents.isEmpty { return "" }
+
+            return documents[0].roadAddress.addressName
+
+        } catch {
+            dump(handleRequestError(error))
+        }
+        return ""
+    }
+
 }

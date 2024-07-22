@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var mapVM = MapViewModel()
-    @ObservedObject private var smokingAreaVM = SmokingAreaViewModel()
+    @StateObject private var smokingAreaVM = SmokingAreaViewModel()
 
     @State private var isAppear = false
     @State private var shouldMove = false
@@ -18,9 +18,7 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            MapView(mapVM: mapVM,
-                    smokingAreaVM: smokingAreaVM,
-                    isAppear: $isAppear,
+            MapView(isAppear: $isAppear,
                     shouldMove: $shouldMove,
                     onPoiTapped: onPoiTapped)
             .onAppear() {
@@ -53,7 +51,8 @@ struct ContentView: View {
                 }
             }
         }
-
+        .environmentObject(mapVM)
+        .environmentObject(smokingAreaVM)
     }
 
     private func buildOutOfSeoulText() -> some View {

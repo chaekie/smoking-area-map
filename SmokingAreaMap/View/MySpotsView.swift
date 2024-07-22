@@ -21,10 +21,10 @@ struct MySpotsView: View {
                     emptySpotView()
                 } else {
                     List(vm.spots, id: \.id) { spot in
-                        NavigationLink(
-                            destination: DeferView(MySpotView(spot: spot))
-                        ) {
-                            buildSpotRow(spot)
+                        NavigationLink {
+                            DeferView(MySpotView(spot: spot))
+                        } label: {
+                           buildSpotRow(spot)
                         }
                     }
                 }
@@ -50,7 +50,7 @@ struct MySpotsView: View {
             }
     }
 
-    func emptySpotView() -> some View {
+    private func emptySpotView() -> some View {
         CenterContainerView {
             Text("등록된 내 장소가 없습니다.\n+ 버튼을 눌러 나만의 흡연구역을 등록하세요.")
                 .multilineTextAlignment(.center)
@@ -59,13 +59,13 @@ struct MySpotsView: View {
         }
     }
 
-    func fullScreenProgressView() -> some View {
+    private func fullScreenProgressView() -> some View {
         CenterContainerView {
             ProgressView()
         }
     }
 
-    func buildSpotRow(_ spot: MySpot) -> some View {
+    private func buildSpotRow(_ spot: MySpot) -> some View {
         HStack {
             VStack {
                 Text(spot.name)
@@ -73,23 +73,6 @@ struct MySpotsView: View {
             }
             Spacer()
         }
-    }
-}
-
-struct CenterContainerView<Content: View>: View {
-    @ViewBuilder let content: Content
-
-    var body: some View {
-        VStack {
-            Spacer()
-            HStack {
-                Spacer()
-                content
-                Spacer()
-            }
-            Spacer()
-        }
-        .background(Color(UIColor.secondarySystemBackground))
     }
 }
 

@@ -17,6 +17,10 @@ final class MySpotViewModel: ObservableObject {
     @Published var photo: Data?
     @Published var createdDate: String?
 
+    @Published var tempLongitude = ""
+    @Published var tempLatitude = ""
+    @Published var tempAddress = ""
+
     @Published var isSaveButtonEnabled = false
 
     let dataService = PersistenceController.shared

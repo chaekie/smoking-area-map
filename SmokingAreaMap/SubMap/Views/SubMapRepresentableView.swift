@@ -1,24 +1,23 @@
 //
-//  MapView.swift
+//  SubMapRepresentableView.swift
 //  SmokingAreaMap
 //
-//  Created by chaekie on 6/11/24.
+//  Created by chaekie on 7/22/24.
 //
 
 import CoreLocation
 import KakaoMapsSDK
 import SwiftUI
 
-struct MapView: UIViewRepresentable {
+struct SubMapRepresentableView: UIViewRepresentable {
     @EnvironmentObject var mapVM: MapViewModel
     @EnvironmentObject var smokingAreaVM: SmokingAreaViewModel
-
+    @EnvironmentObject var mySpotVM: MySpotViewModel
+    
     @Binding var isAppear: Bool
     @Binding var shouldMove: Bool
+    let mapMode: MapMode
 
-    var onPoiTapped: () -> Void
-
-    static let mapViewName = "mainMap"
     @Environment(\.scenePhase) var scenePhase
 
     func makeUIView(context: Self.Context) -> KMViewContainer {
@@ -29,6 +28,7 @@ struct MapView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: KMViewContainer, context: Self.Context) {
+        print("@@@ isAppear:", isAppear)
         let coordinator = context.coordinator
         guard let controller = coordinator.controller else { return }
 
@@ -46,39 +46,22 @@ struct MapView: UIViewRepresentable {
                     if controller.isEngineActive == false { controller.activateEngine() }
 
                     if controller.isEnginePrepared && controller.isEngineActive {
-                        updateSmokingAreasPoi(coordinator)
-                        updateMySpotsPoi(coordinator)
 
-                        if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
-                            coordinator.hideAllPolygons()
-                        }
                     }
                 }
             } else {
                 controller.pauseEngine()
+                controller.resetEngine()
             }
         }
     }
 
-    private func updateSmokingAreasPoi(_ coordinator: Coordinator) {
-        if smokingAreaVM.isSmokingAreasUpdated {
-            coordinator.setPois(smokingAreaVM.smokingAreas, poiInfo: coordinator.spotPoiInfo)
-            smokingAreaVM.isSmokingAreasUpdated = false
-        }
+    func makeCoordinator() -> SubMapCoordinator {
+        SubMapCoordinator(parent: self)
     }
 
-    private func updateMySpotsPoi(_ coordinator: Coordinator) {
-        if smokingAreaVM.isMySpotUpdated {
-            coordinator.setPois(smokingAreaVM.mySpots, poiInfo: coordinator.mySpotPoiInfo)
-            smokingAreaVM.isMySpotUpdated = false
-        }
-    }
-
-    func makeCoordinator() -> MapCoordinator {
-        MapCoordinator(parent: self)
-    }
-
-    static func dismantleUIView(_ uiView: KMViewContainer, coordinator: MapCoordinator) {
+    static func dismantleUIView(_ uiView: KMViewContainer, coordinator: SubMapCoordinator) {
+        print("@@@ dismantleUIView isAppear:")
         coordinator.controller?.pauseEngine()
         coordinator.controller?.resetEngine()
     }

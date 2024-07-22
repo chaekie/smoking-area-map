@@ -13,6 +13,7 @@ struct DeferView<Content: View>: View {
     init(_ content: @autoclosure @escaping () -> Content) {
         self.content = content
     }
+    
     var body: some View {
         content()
     }
