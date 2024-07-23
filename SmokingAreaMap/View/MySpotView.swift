@@ -11,11 +11,12 @@ struct MySpotView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject var mySpotVM: MySpotViewModel
 
-    @State var isNew = false
-    @State var isEditingMode = false
-    @State var isSearchMode = false
-    @State var shouldShowMapThumbnail = false
-    @State var shouldDelete = false
+    @State private var isNew = false
+    @State private var isEditingMode = false
+    @State private var isSearchingModeByTextButton = false
+    @State private var isSearchingModeByMapButton = false
+    @State private var shouldShowMapThumbnail = false
+    @State private var shouldDelete = false
 
     @Binding var isCreatingNew: Bool?
 
@@ -30,11 +31,7 @@ struct MySpotView: View {
             if isNew { buildSheetToolbar() }
             if !isNew { buildCreatedDateView() }
             if !mySpotVM.longitude.isEmpty && !mySpotVM.latitude.isEmpty {
-                SubMapView(
-                    isPresented: $shouldShowMapThumbnail,
-                    mapMode: MapMode.showing)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .padding(.horizontal)
+                buildMapThumbnailView()
             }
             List {
                 if isNew || isEditingMode {
@@ -78,8 +75,27 @@ struct MySpotView: View {
         }
     }
 
+
+    private func buildMapThumbnailView() -> some View {
+        Button {
+            if isEditingMode {
+                isSearchingModeByMapButton = true
+            }
+        } label: {
+            SubMapView(
+                isPresented: $shouldShowMapThumbnail,
+                mapMode: MapMode.showing)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .padding(.horizontal)
+        }
+        .fullScreenCover(isPresented: $isSearchingModeByMapButton) {
+            SubMapView(isPresented: $isSearchingModeByMapButton, mapMode: MapMode.searching)
+        }
+        .disabled(!isEditingMode)
+    }
+
     private func buildInputView() -> some View {
-        Section {
+        Group {
             RoundedBorderView(label: "장소명") {
                 TextField("명칭을 입력해주세요", text: $mySpotVM.name)
             }
@@ -87,17 +103,14 @@ struct MySpotView: View {
             RoundedBorderView(label: "위치") {
                 buildSearchAddressButton()
             }
-        } header: {
-            Spacer(minLength: 0)
         }
-        .listRowSeparator(.hidden, edges: .all)
     }
 
     private func buildSearchAddressButton() -> some View {
         let hasAddress = !mySpotVM.address.isEmpty
 
         return Button {
-            isSearchMode = true
+            isSearchingModeByTextButton = true
         } label: {
             HStack {
                 Text(hasAddress ? mySpotVM.address : "여기를 눌러 주소를 검색하세요.")
@@ -105,22 +118,17 @@ struct MySpotView: View {
                 Image(systemName: "chevron.right")
                     .foregroundStyle(hasAddress ? .gray : .blue)
             }
-        }.fullScreenCover(isPresented: $isSearchMode) {
-            SubMapView(
-                isPresented: $isSearchMode,
-                mapMode: MapMode.searching
-            )
+        }.fullScreenCover(isPresented: $isSearchingModeByTextButton) {
+            SubMapView(isPresented: $isSearchingModeByTextButton, mapMode: MapMode.searching)
         }
     }
 
     private func buildOutputView() -> some View {
-        Section {
+        Group {
             LabeledContent { Text(mySpotVM.name) } label: { Text("장소명") }
             LabeledContent { Text(mySpotVM.address) } label: { Text("주소") }
             LabeledContent { Text(mySpotVM.longitude) } label: { Text("경도") }
             LabeledContent { Text(mySpotVM.latitude) } label: { Text("위도") }
-        } header: {
-            Spacer(minLength: 0)
         }
     }
 
