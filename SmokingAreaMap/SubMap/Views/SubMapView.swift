@@ -12,9 +12,8 @@ struct SubMapView: View {
     @Binding var isPresented: Bool
     let mapMode: MapMode
 
-    @State var isAppear = false
-    @State var shouldMove = false
-
+    @State private var isAppear = false
+    @State private var shouldMove = false
 
     var body: some View {
         SubMapRepresentableView(
@@ -53,7 +52,10 @@ struct SubMapView: View {
         HStack {
             Button("취소") { isPresented = false }
             Spacer()
-            Button("저장") { saveCoord() }
+            Button("저장") {
+                mySpotVM.setLocation()
+                isPresented = false
+            }
         }
         .padding()
         .background(.regularMaterial)
@@ -66,12 +68,5 @@ struct SubMapView: View {
         }
         .padding()
         .background(.regularMaterial)
-    }
-
-    private func saveCoord() {
-        mySpotVM.longitude = mySpotVM.tempLongitude
-        mySpotVM.latitude = mySpotVM.tempLatitude
-        mySpotVM.address = mySpotVM.tempAddress
-        isPresented = false
     }
 }

@@ -13,7 +13,6 @@ class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate 
 
     var parent: SubMapRepresentableView
     var controller: KMController?
-    var first: Bool
 
     var longitude: Double?
     var latitude: Double?
@@ -22,7 +21,6 @@ class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate 
 
     init(parent: SubMapRepresentableView) {
         self.parent = parent
-        first = true
         super.init()
     }
 
@@ -31,48 +29,43 @@ class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate 
         controller?.delegate = self
     }
 
-
     func addViews() {
-        let mapviewInfo = MapviewInfo(viewName: parent.mapMode.name, defaultPosition: MapPoint(longitude: defaultPosition.longitude, latitude: defaultPosition.latitude))
+        let longitude = Double(parent.mySpotVM.longitude) ?? defaultPosition.longitude
+        let latitude = Double(parent.mySpotVM.latitude) ?? defaultPosition.latitude
+
+        let mapviewInfo = MapviewInfo(
+            viewName: parent.mapMode.name,
+            defaultPosition: MapPoint(longitude: longitude, latitude: latitude),
+            defaultLevel: parent.mapMode.zoomLevel
+        )
+
         controller?.addView(mapviewInfo)
     }
 
     func addViewSucceeded(_ viewName: String, viewInfoName: String) {
         guard let view = controller?.getView(viewName) as? KakaoMap else { return }
-        if parent.mySpotVM.longitude == "" {
-            moveCamera(to: parent.mapVM.currentLocation)
-        } else {
-            guard let longitude = Double(parent.mySpotVM.longitude),
-                  let latitude = Double(parent.mySpotVM.latitude) else { return }
-            moveCamera(to: GeoCoordinate(longitude: longitude, latitude: latitude))
-        }
 
+        setUpCamera(view)
+    }
+
+    private func setUpCamera(_ view: KakaoMap) {
         cameraStoppedHandler = view.addCameraStoppedEventHandler(target: self, handler: SubMapCoordinator.onCameraStopped)
     }
 
     func addViewFailed(_ viewName: String, viewInfoName: String) {
-        print("Failed")
+        print(#function)
     }
 
     func containerDidResized(_ size: CGSize) {
-        let mapView = controller?.getView(parent.mapMode.name) as? KakaoMap
-        mapView?.viewRect = CGRect(origin: CGPoint(x: 0.0, y: 0.0), size: size)
-        if first {
-            let cameraUpdate = CameraUpdate.make(target: MapPoint(
-                longitude: defaultPosition.longitude,
-                latitude: defaultPosition.latitude
-            ), mapView: mapView!)
-            mapView?.moveCamera(cameraUpdate)
-            first = false
-        }
+        print(#function)
     }
 
-    func moveCamera(to location: GeoCoordinate) {
+    func moveCamera(to location: GeoCoordinate, zoomLevel: Int = 15, duration: UInt = 1) {
         guard let view = controller?.getView(parent.mapMode.name) as? KakaoMap else { return }
 
         let cameraUpdate = CameraUpdate.make(
             target: MapPoint(longitude: location.longitude, latitude: location.latitude),
-            zoomLevel: parent.mapMode == .searching ? 15 : 17,
+            zoomLevel: zoomLevel,
             rotation: 0.0,
             tilt: 0.0,
             mapView: view
@@ -80,7 +73,7 @@ class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate 
 
         view.animateCamera(
             cameraUpdate: cameraUpdate,
-            options: CameraAnimationOptions(autoElevation: false, consecutive: true, durationInMillis: 300)
+            options: CameraAnimationOptions(autoElevation: false, consecutive: true, durationInMillis: duration)
         )
     }
 
@@ -93,7 +86,9 @@ class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate 
         parent.mySpotVM.tempLongitude = longitude
         parent.mySpotVM.tempLatitude = latitude
         Task { @MainActor in
-            parent.mySpotVM.tempAddress = await parent.smokingAreaVM.getRoadAddress(by: Coordinate(longitude: longitude, latitude: latitude))
+            parent.mySpotVM.tempAddress = await parent.smokingAreaVM.getRoadAddress(
+                by: Coordinate(longitude: longitude, latitude: latitude)
+            )
         }
     }
 }

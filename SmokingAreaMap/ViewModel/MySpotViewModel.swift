@@ -21,6 +21,8 @@ final class MySpotViewModel: ObservableObject {
     @Published var tempLatitude = ""
     @Published var tempAddress = ""
 
+    @Published var isDismissed = false
+
     @Published var isSaveButtonEnabled = false
 
     let dataService = PersistenceController.shared
@@ -78,10 +80,9 @@ final class MySpotViewModel: ObservableObject {
 
         dataService.create(name: self.name,
                            address: self.address,
-                           longitude: Double(longitude),
-                           latitude: Double(latitude),
-                           photo: Data()
-        )
+                           longitude: longitude,
+                           latitude: latitude,
+                           photo: Data())
     }
 
     func updateSpot(_ spot: MySpot) {
@@ -96,5 +97,12 @@ final class MySpotViewModel: ObservableObject {
 
     func deleteSpot(_ spot: MySpot) {
         dataService.delete(spot)
+    }
+
+    func setLocation() {
+        longitude = tempLongitude
+        latitude = tempLatitude
+        address = tempAddress
+        isDismissed = true
     }
 }

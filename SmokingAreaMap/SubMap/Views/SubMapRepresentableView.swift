@@ -28,12 +28,11 @@ struct SubMapRepresentableView: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: KMViewContainer, context: Self.Context) {
-        print("@@@ isAppear:", isAppear)
         let coordinator = context.coordinator
         guard let controller = coordinator.controller else { return }
 
         if isAppear && shouldMove {
-            coordinator.moveCamera(to: mapVM.currentLocation)
+            coordinator.moveCamera(to: mapVM.currentLocation, duration: 300)
             return
         }
 
@@ -46,7 +45,13 @@ struct SubMapRepresentableView: UIViewRepresentable {
                     if controller.isEngineActive == false { controller.activateEngine() }
 
                     if controller.isEnginePrepared && controller.isEngineActive {
-
+                        if mapMode == .showing && mySpotVM.isDismissed {
+                            guard let longitude = Double(mySpotVM.longitude),
+                                  let latitude = Double(mySpotVM.latitude) else { return }
+                            coordinator.moveCamera(to: GeoCoordinate(longitude: longitude, latitude: latitude),
+                                                   zoomLevel: mapMode.zoomLevel)
+                            mySpotVM.isDismissed = false
+                        }
                     }
                 }
             } else {
@@ -61,7 +66,6 @@ struct SubMapRepresentableView: UIViewRepresentable {
     }
 
     static func dismantleUIView(_ uiView: KMViewContainer, coordinator: SubMapCoordinator) {
-        print("@@@ dismantleUIView isAppear:")
         coordinator.controller?.pauseEngine()
         coordinator.controller?.resetEngine()
     }

@@ -42,28 +42,27 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
         let longitude = parent.mapVM.currentLocation.longitude
         let latitude = parent.mapVM.currentLocation.latitude
 
-        if longitude != 0.0 && latitude != 0.0 {
-            let mapviewInfo = MapviewInfo(viewName: MapView.mapViewName,
-                                          defaultPosition: MapPoint(longitude: longitude, latitude: latitude))
-            controller?.addView(mapviewInfo)
-        } else {
-            let mapviewInfo = MapviewInfo(viewName: MapView.mapViewName,
-                                          defaultPosition: MapPoint(
-                                            longitude: defaultPosition.longitude, latitude: defaultPosition.latitude))
-            controller?.addView(mapviewInfo)
-        }
+        let finalLongitude = (longitude != 0.0) ? longitude : defaultPosition.longitude
+        let finalLatitude = (latitude != 0.0) ? latitude : defaultPosition.latitude
+
+        let mapviewInfo = MapviewInfo(
+            viewName: MapView.mapViewName,
+            defaultPosition: MapPoint(longitude: finalLongitude, latitude: finalLatitude)
+        )
+
+        controller?.addView(mapviewInfo)
     }
 
     func addViewSucceeded(_ viewName: String, viewInfoName: String) {
         guard let view = controller?.getView(viewName) as? KakaoMap else { return }
         let labelManager = view.getLabelManager()
         let shapeManager = view.getShapeManager()
-
-        createLabelLayer(labelManager, poiInfo: spotPoiInfo)
-        createPoiStyle(labelManager, poiInfo: spotPoiInfo)
-
-        createLabelLayer(labelManager, poiInfo: mySpotPoiInfo)
-        createPoiStyle(labelManager, poiInfo: mySpotPoiInfo)
+        
+        [spotPoiInfo, mySpotPoiInfo].forEach { poiInfo in
+            createLabelLayer(labelManager, poiInfo: poiInfo)
+            createPoiStyle(labelManager, poiInfo: poiInfo)
+        }
+        
         setPois(parent.smokingAreaVM.mySpots, poiInfo: mySpotPoiInfo)
 
         setCurrentPosiotionPoi(labelManager)
@@ -180,12 +179,6 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     }
 
     private func setUpCamera(_ view: KakaoMap) {
-        if parent.mapVM.currentLocation.longitude == 0.0 && parent.mapVM.currentLocation.latitude == 0.0 {
-            setUpFirstDistrict(defaultPosition)
-        } else {
-            setUpFirstDistrict(parent.mapVM.currentLocation)
-        }
-
         cameraStartHandler = view.addCameraWillMovedEventHandler(target: self, handler: MapCoordinator.onCameraWillMove)
         cameraStoppedHandler = view.addCameraStoppedEventHandler(target: self, handler: MapCoordinator.onCameraStopped)
     }
@@ -195,7 +188,7 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
 
         let cameraUpdate = CameraUpdate.make(
             target: MapPoint(longitude: location.longitude, latitude: location.latitude),
-            zoomLevel: 15,
+            zoomLevel: 17,
             rotation: 0.0,
             tilt: 0.0,
             mapView: view

@@ -28,4 +28,13 @@ enum MapMode {
             return 250
         }
     }
+
+    var zoomLevel: Int {
+        switch self {
+        case .searching:
+            return 15
+        case .showing:
+            return 17
+        }
+    }
 }
