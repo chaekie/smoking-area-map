@@ -14,6 +14,7 @@ struct SubMapView: View {
 
     @State private var isAppear = false
     @State private var shouldMove = false
+    @State private var isLocationAlertPresented = false
 
     var body: some View {
         SubMapRepresentableView(
@@ -44,6 +45,12 @@ struct SubMapView: View {
                     .font(.title2)
             case .showing:
                 Image("my_pin")
+            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if mapMode == .searching {
+                CurrentLocationButtonView(shouldMove: $shouldMove, 
+                                          isLocationAlertPresented: $isLocationAlertPresented)
             }
         }
     }
