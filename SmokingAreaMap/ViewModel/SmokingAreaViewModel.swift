@@ -219,31 +219,16 @@ final class SmokingAreaViewModel: ObservableObject {
         return data
     }
 
-    func getDistrict(by coordinates: Coordinate) async -> DistrictInfo? {
-        let urlString = "\(kakaoLocalBaseURL)geo/coord2regioncode.json?x=\(coordinates.longitude)&y=\(coordinates.latitude)"
+    func getAddress(by coordinates: Coordinate) async -> Address? {
+        let urlString = "\(kakaoLocalBaseURL)geo/coord2address.json?x=\(coordinates.longitude)&y=\(coordinates.latitude)"
 
         do {
             let data = try await getKakaoApiData(urlString: urlString)
-            let decodedData = try JSONDecoder().decode(LocalRegionDataResult.self, from: data)
+            let decodedData = try JSONDecoder().decode(LocalAddressDataResult.self, from: data)
             let documents = decodedData.documents
             if documents.isEmpty { return nil }
 
-            guard let region = District(rawValue: documents[0].gu) else {
-                DispatchQueue.main.async {
-                    withAnimation(.easeIn(duration: 0.2)) {
-                        self.isInSeoul = false
-                    }
-                }
-                return nil
-            }
-
-            DispatchQueue.main.async {
-                withAnimation(.easeIn(duration: 0.2)) {
-                    self.isInSeoul = true
-                }
-            }
-
-            return DistrictInfo(name: region.name, code: region.code, uuid: region.uuid)
+            return documents[0].address
 
         } catch {
             dump(handleRequestError(error))
@@ -251,21 +236,22 @@ final class SmokingAreaViewModel: ObservableObject {
         return nil
     }
 
-    func getRoadAddress(by coordinates: Coordinate) async -> String {
-        let urlString = "\(kakaoLocalBaseURL)geo/coord2address.json?x=\(coordinates.longitude)&y=\(coordinates.latitude)"
-
-        do {
-            let data = try await getKakaoApiData(urlString: urlString)
-            let decodedData = try JSONDecoder().decode(LocalAddressDataResult.self, from: data)
-            let documents = decodedData.documents
-            if documents.isEmpty { return "" }
-
-            return documents[0].roadAddress.addressName
-
-        } catch {
-            dump(handleRequestError(error))
+    func getDistrictInfo(by gu: String) -> DistrictInfo? {
+        guard let region = District(rawValue: gu) else {
+            DispatchQueue.main.async {
+                withAnimation(.easeIn(duration: 0.2)) {
+                    self.isInSeoul = false
+                }
+            }
+            return nil
         }
-        return ""
-    }
 
+        DispatchQueue.main.async {
+            withAnimation(.easeIn(duration: 0.2)) {
+                self.isInSeoul = true
+            }
+        }
+
+        return DistrictInfo(name: region.name, code: region.code, uuid: region.uuid)
+    }
 }

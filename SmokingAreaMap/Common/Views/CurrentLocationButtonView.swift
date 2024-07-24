@@ -16,7 +16,7 @@ struct CurrentLocationButtonView: View {
         Button {
             moveToCurrentLocation()
         } label: {
-            Image(systemName: "dot.scope")
+            Image(systemName: "scope")
                 .font(.title2)
                 .padding(15)
                 .background(Color.white)

@@ -86,9 +86,8 @@ class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate 
         parent.mySpotVM.tempLongitude = longitude
         parent.mySpotVM.tempLatitude = latitude
         Task { @MainActor in
-            parent.mySpotVM.tempAddress = await parent.smokingAreaVM.getRoadAddress(
-                by: Coordinate(longitude: longitude, latitude: latitude)
-            )
+            guard let address = await parent.smokingAreaVM.getAddress(by: Coordinate(longitude: longitude, latitude: latitude)) else { return }
+            parent.mySpotVM.tempAddress = address.fullAddress
         }
     }
 }

@@ -26,38 +26,29 @@ struct Coordinate: Codable {
     }
 }
 
-// 좌표계 -> 행정구역
-struct LocalRegionDataResult: Codable {
-    let documents: [Region]
+// 좌표계 -> 지번 주소
+struct LocalAddressDataResult: Codable {
+    let documents: [LocalAddressDocument]
 }
 
-struct Region: Codable {
-    let siDo, gu, dong: String
+struct LocalAddressDocument: Codable {
+    let address: Address
 
     enum CodingKeys: String, CodingKey {
-        case siDo = "region_1depth_name"
-        case gu = "region_2depth_name"
-        case dong = "region_3depth_name"
+        case address
     }
-}
-
-// 좌표계 -> 도로명
-struct LocalAddressDataResult: Codable {
-    let documents: [Address] // count 0 또는 1
 }
 
 struct Address: Codable {
-    let roadAddress: RoadAddress
+    let fullAddress, siDo, gu, dong, mountainYn, mainAddressNo, subAddressNo: String
 
     enum CodingKeys: String, CodingKey {
-        case roadAddress = "road_address"
-    }
-}
-
-struct RoadAddress: Codable {
-    let addressName: String
-
-    enum CodingKeys: String, CodingKey {
-        case addressName = "address_name"
+        case fullAddress = "address_name"
+        case siDo = "region_1depth_name"
+        case gu = "region_2depth_name"
+        case dong = "region_3depth_name"
+        case mountainYn = "mountain_yn"
+        case mainAddressNo = "main_address_no"
+        case subAddressNo = "sub_address_no"
     }
 }

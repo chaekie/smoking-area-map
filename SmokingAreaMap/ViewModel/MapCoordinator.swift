@@ -14,16 +14,19 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     var controller: KMController?
     var auth: Bool
 
-    var cameraStoppedHandler: DisposableEventHandler?
-    var cameraStartHandler: DisposableEventHandler?
+    private var cameraStoppedHandler: DisposableEventHandler?
+    private var cameraStartHandler: DisposableEventHandler?
 
     private let defaultPosition = GeoCoordinate(longitude: 126.978365, latitude: 37.566691)
     let spotPoiInfo = PoiInfo(layer: Layer(id: "spotLayer", zOrder: 10000),
-                                      style: Style(id: "spotStyle", symbol: UIImage(named: "pin")),
-                                      rank: 5)
+                              style: Style(id: "spotStyle", symbol: UIImage(named: "pin")),
+                              rank: 5)
     let mySpotPoiInfo = PoiInfo(layer: Layer(id: "mySpotLayer", zOrder: 10001),
-                                      style: Style(id: "mySpotStyle", symbol: UIImage(named: "my_pin")),
-                                      rank: 5)
+                                style: Style(id: "mySpotStyle", symbol: UIImage(named: "my_pin")),
+                                rank: 5)
+    private let currentPoiInfo = PoiInfo(layer: Layer(id: "cpLayer", zOrder: 10001),
+                                 style: Style(id: "cpPoiStyle", symbol: UIImage(named: "current_position")),
+                                 rank: 10)
     private let polygonLayerID = "seoulPolygonLayer"
     private let polygonStyleID = "seoulPolygonLayer"
 
@@ -57,15 +60,14 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
         guard let view = controller?.getView(viewName) as? KakaoMap else { return }
         let labelManager = view.getLabelManager()
         let shapeManager = view.getShapeManager()
-        
-        [spotPoiInfo, mySpotPoiInfo].forEach { poiInfo in
+
+        [currentPoiInfo, spotPoiInfo, mySpotPoiInfo].forEach { poiInfo in
             createLabelLayer(labelManager, poiInfo: poiInfo)
             createPoiStyle(labelManager, poiInfo: poiInfo)
         }
-        
-        setPois(parent.smokingAreaVM.mySpots, poiInfo: mySpotPoiInfo)
 
         setCurrentPosiotionPoi(labelManager)
+        setPois(parent.smokingAreaVM.mySpots, poiInfo: mySpotPoiInfo)
 
         createPolygonStyleSet(shapeManager, styleID: polygonStyleID)
         let polygonData = getDistrictPolygonData()
@@ -95,12 +97,6 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     }
 
     private func setCurrentPosiotionPoi(_ manager: LabelManager) {
-        let currentPoiInfo = PoiInfo(layer: Layer(id: "cpLayer", zOrder: 10001),
-                                     style: Style(id: "cpPoiStyle", symbol: UIImage(named: "current_position")),
-                                     rank: 10)
-
-        createLabelLayer(manager, poiInfo: currentPoiInfo)
-        createPoiStyle(manager, poiInfo: currentPoiInfo)
         parent.mapVM.currentPositionPoi = createPois(manager, poiInfo: currentPoiInfo, location: parent.mapVM.currentLocation)
         parent.mapVM.currentPositionPoi?.show()
     }
@@ -202,9 +198,8 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
 
     private func setUpFirstDistrict(_ coord: GeoCoordinate) {
         Task {
-            guard let district = await parent.smokingAreaVM.getDistrict(
-                by: Coordinate(longitude: String(coord.longitude), latitude: String(coord.latitude))
-            ) else { return }
+            guard let address = await parent.smokingAreaVM.getAddress(by: Coordinate(longitude: String(coord.longitude), latitude: String(coord.latitude))),
+                  let district = await parent.smokingAreaVM.getDistrictInfo(by: address.gu) else { return }
 
             await parent.smokingAreaVM.fetchSmokingArea(district: district)
             await setPois(parent.smokingAreaVM.smokingAreas, poiInfo: spotPoiInfo)
@@ -234,11 +229,12 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     func onCameraStopped(_ param: CameraActionEventParam) {
         guard let view = param.view as? KakaoMap else { return }
         let center = view.getPosition(CGPoint(x: view.viewRect.size.width * 0.5, y: view.viewRect.size.height * 0.5))
+        let longitude = String(center.wgsCoord.longitude)
+        let latitude = String(center.wgsCoord.latitude)
 
         Task {
-            guard let district = await parent.smokingAreaVM.getDistrict(
-                by: Coordinate(longitude: String(center.wgsCoord.longitude), latitude: String(center.wgsCoord.latitude))
-            ) else {
+            guard let address = await parent.smokingAreaVM.getAddress(by: Coordinate(longitude: longitude, latitude: latitude)),
+                  let district = await parent.smokingAreaVM.getDistrictInfo(by: address.gu) else {
                 updateFocusedPolygon(view, district: nil)
                 return
             }

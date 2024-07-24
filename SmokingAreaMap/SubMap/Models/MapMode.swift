@@ -34,7 +34,7 @@ enum MapMode {
         case .searching:
             return 15
         case .showing:
-            return 17
+            return 18
         }
     }
 }

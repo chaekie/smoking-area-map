@@ -31,26 +31,26 @@ struct SubMapView: View {
         .ignoresSafeArea()
         .allowsHitTesting(mapMode == .searching)
         .frame(maxWidth: .infinity, maxHeight: mapMode.height)
-        .overlay(alignment: .topLeading) {
-            if mapMode == .searching { buildHeaderView() }
-        }
-        .overlay(alignment: .bottom) {
-            if mapMode == .searching { buildFooterView() }
-        }
-        .overlay(alignment: .center) {
-            switch mapMode {
-            case .searching:
-                Image(systemName: "dot.circle.viewfinder")
-                    .foregroundStyle(.blue)
-                    .font(.title2)
-            case .showing:
+        .if(mapMode == .showing) {
+            $0.overlay(alignment: .center) {
                 Image("my_pin")
             }
         }
-        .overlay(alignment: .bottomTrailing) {
-            if mapMode == .searching {
-                CurrentLocationButtonView(shouldMove: $shouldMove, 
+        .if(mapMode == .searching) {
+            $0.overlay(alignment: .topLeading) {
+                buildHeaderView()
+            }
+            .overlay(alignment: .bottom) {
+                buildFooterView()
+            }
+            .overlay(alignment: .bottomTrailing) {
+                CurrentLocationButtonView(shouldMove: $shouldMove,
                                           isLocationAlertPresented: $isLocationAlertPresented)
+            }
+            .overlay(alignment: .center) {
+                Image(systemName: "dot.circle.viewfinder")
+                    .foregroundStyle(.blue)
+                    .font(.title2)
             }
         }
     }
