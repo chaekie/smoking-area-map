@@ -67,7 +67,7 @@ struct MySpotsView: View {
 
     private func buildSpotRow(_ spot: MySpot) -> some View {
         HStack {
-            VStack {
+            VStack(alignment: .leading, spacing: 10) {
                 Text(spot.name)
                 Text(spot.address)
             }

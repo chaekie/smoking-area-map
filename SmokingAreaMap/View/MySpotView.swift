@@ -27,54 +27,43 @@ struct MySpotView: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            if isNew { buildSheetToolbar() }
+        ZStack(alignment: .top) {
             if !isNew { buildCreatedDateView() }
-            if !mySpotVM.longitude.isEmpty && !mySpotVM.latitude.isEmpty {
-                buildMapThumbnailView()
-            }
+
             List {
+                if !mySpotVM.longitude.isEmpty && !mySpotVM.latitude.isEmpty {
+                    buildMapThumbnailView()
+                }
+
                 if isNew || isEditingMode {
                     buildInputView()
                 } else {
                     buildOutputView()
                 }
+
                 if !isNew { buildDeleteSpotButton() }
             }
-        }
-        .environmentObject(mySpotVM)
-        .toolbar {
-            buildToolbar()
-        }
-        .background(Color(UIColor.secondarySystemBackground))
-        .navigationBarBackButtonHidden(isEditingMode)
-    }
+            .scrollContentBackground(.hidden)
+            .animation(.easeInOut, value: isEditingMode)
+            .if(isNew) { $0.offset(y: 25) }
 
-    private func buildSheetToolbar() -> some View {
-        HStack {
-            Button("취소") {
-                dismiss()
-            }
-            Spacer()
-            Button("저장") {
-                mySpotVM.createSpot()
-                isCreatingNew = true
-                dismiss()
-            }
-            .disabled(!mySpotVM.isSaveButtonEnabled)
+            if isNew { buildSheetToolbar() }
         }
-        .padding(.horizontal)
-        .padding(.top)
+        .toolbar { buildToolbar() }
+        .environmentObject(mySpotVM)
+        .navigationBarBackButtonHidden(isEditingMode)
+        .background(Color(UIColor.secondarySystemBackground))
     }
 
     private func buildCreatedDateView() -> some View {
-        HStack(alignment: .center) {
+        HStack {
+            Spacer()
             Text(mySpotVM.createdDate ?? "")
                 .foregroundStyle(.gray)
                 .font(.footnote)
+            Spacer()
         }
     }
-
 
     private func buildMapThumbnailView() -> some View {
         Button {
@@ -85,17 +74,25 @@ struct MySpotView: View {
             SubMapView(
                 isPresented: $shouldShowMapThumbnail,
                 mapMode: MapMode.showing)
+            .frame(height: 250)
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .padding(.horizontal)
         }
         .fullScreenCover(isPresented: $isSearchingModeByMapButton) {
             SubMapView(isPresented: $isSearchingModeByMapButton, mapMode: MapMode.searching)
         }
         .disabled(!isEditingMode)
+        .listRowInsets(EdgeInsets())
+    }
+
+    private func buildOutputView() -> some View {
+        Section {
+            LabeledContent { Text(mySpotVM.name) } label: { Text("장소명") }
+            LabeledContent { Text(mySpotVM.address) } label: { Text("위치") }
+        }
     }
 
     private func buildInputView() -> some View {
-        Group {
+        Section {
             RoundedBorderView(label: "장소명") {
                 TextField("명칭을 입력해주세요", text: $mySpotVM.name)
             }
@@ -123,15 +120,6 @@ struct MySpotView: View {
         }
     }
 
-    private func buildOutputView() -> some View {
-        Group {
-            LabeledContent { Text(mySpotVM.name) } label: { Text("장소명") }
-            LabeledContent { Text(mySpotVM.address) } label: { Text("주소") }
-            LabeledContent { Text(mySpotVM.longitude) } label: { Text("경도") }
-            LabeledContent { Text(mySpotVM.latitude) } label: { Text("위도") }
-        }
-    }
-
     private func buildDeleteSpotButton() -> some View {
         Button("장소 삭제하기", role: .destructive) {
             shouldDelete = true
@@ -149,6 +137,23 @@ struct MySpotView: View {
         }
     }
 
+    private func buildSheetToolbar() -> some View {
+        HStack {
+            Button("취소") {
+                dismiss()
+            }
+            Spacer()
+            Button("저장") {
+                mySpotVM.createSpot()
+                isCreatingNew = true
+                dismiss()
+            }
+            .disabled(!mySpotVM.isSaveButtonEnabled)
+        }
+        .padding()
+        .background(Color(UIColor.secondarySystemBackground))
+    }
+
     @ToolbarContentBuilder
     private func buildToolbar() -> some ToolbarContent {
         if isEditingMode {
@@ -162,7 +167,7 @@ struct MySpotView: View {
                 Button("저장") {
                     if let spot = mySpotVM.spot {
                         mySpotVM.updateSpot(spot)
-                        dismiss()
+                        isEditingMode = false
                     }
                 }
                 .disabled(!mySpotVM.isSaveButtonEnabled)
