@@ -97,7 +97,7 @@ class PersistenceController {
             hasChanges = true
         }
 
-        if let photo {
+        if photo != Data() {
             entity.photo = photo
             hasChanges = true
         }

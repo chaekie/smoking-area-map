@@ -7,6 +7,8 @@
 
 import Combine
 import Foundation
+import PhotosUI
+import SwiftUI
 
 final class MySpotViewModel: ObservableObject {
     @Published var spot: MySpot?
@@ -15,6 +17,7 @@ final class MySpotViewModel: ObservableObject {
     @Published var longitude: String
     @Published var latitude: String
     @Published var photo: Data?
+
     @Published var createdDate: String?
 
     @Published var tempLongitude = ""
@@ -76,13 +79,14 @@ final class MySpotViewModel: ObservableObject {
 
     func createSpot() {
         guard let longitude = Double(longitude),
-              let latitude = Double(latitude) else { return }
+              let latitude = Double(latitude),
+              let photo else { return }
 
         dataService.create(name: self.name,
                            address: self.address,
                            longitude: longitude,
                            latitude: latitude,
-                           photo: Data())
+                           photo: photo)
     }
 
     func updateSpot(_ spot: MySpot) {
@@ -90,7 +94,7 @@ final class MySpotViewModel: ObservableObject {
         let newAddress = spot.address == address ? nil : address
         let newLongitude = spot.longitude == Double(longitude) ? nil : Double(longitude)
         let newLatitude = spot.latitude == Double(latitude) ? nil : Double(latitude)
-        let newPhoto = spot.photo == photo ? nil : photo
+        let newPhoto = spot.photo == photo ? Data() : photo == nil ? nil : photo
 
         dataService.update(entity: spot, name: newName, address: newAddress, longitude: newLongitude, latitude: newLatitude, photo: newPhoto)
     }
@@ -104,5 +108,14 @@ final class MySpotViewModel: ObservableObject {
         latitude = tempLatitude
         address = tempAddress
         isDismissed = true
+    }
+    
+    @MainActor
+    func setPhoto(from selectedPhoto: PhotosPickerItem) async {
+        do {
+            self.photo = try await selectedPhoto.loadTransferable(type: Data.self)
+        } catch {
+            print(error)
+        }
     }
 }

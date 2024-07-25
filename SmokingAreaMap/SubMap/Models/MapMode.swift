@@ -32,9 +32,9 @@ enum MapMode {
     var zoomLevel: Int {
         switch self {
         case .searching:
-            return 15
-        case .showing:
             return 18
+        case .showing:
+            return 20
         }
     }
 }

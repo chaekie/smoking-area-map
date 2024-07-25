@@ -60,7 +60,7 @@ class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate 
         print(#function)
     }
 
-    func moveCamera(to location: GeoCoordinate, zoomLevel: Int = 15, duration: UInt = 1) {
+    func moveCamera(to location: GeoCoordinate, zoomLevel: Int = 18, duration: UInt = 1) {
         guard let view = controller?.getView(parent.mapMode.name) as? KakaoMap else { return }
 
         let cameraUpdate = CameraUpdate.make(

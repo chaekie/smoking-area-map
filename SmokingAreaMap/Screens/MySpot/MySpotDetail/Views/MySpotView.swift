@@ -5,20 +5,25 @@
 //  Created by chaekie on 7/16/24.
 //
 
+import PhotosUI
 import SwiftUI
 
 struct MySpotView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject var mySpotVM: MySpotViewModel
 
+    @Binding var isCreatingNew: Bool?
+
     @State private var isNew = false
     @State private var isEditingMode = false
-    @State private var isSearchingModeByTextButton = false
-    @State private var isSearchingModeByMapButton = false
-    @State private var shouldShowMapThumbnail = false
     @State private var shouldDelete = false
 
-    @Binding var isCreatingNew: Bool?
+    @State private var isSearchingModeByTextButton = false
+    @State private var isSearchingModeByMapButton = false
+
+    @State private var shouldShowMapThumbnail = false
+    @State private var shouldShowPhotosPicker = false
+    @State private var selectedPhoto: PhotosPickerItem?
 
     init(spot: MySpot? = nil, isCreatingNew: Binding<Bool?> = .constant(nil)) {
         if spot == nil { isNew = true }
@@ -31,10 +36,6 @@ struct MySpotView: View {
             if !isNew { buildCreatedDateView() }
 
             List {
-                if !mySpotVM.longitude.isEmpty && !mySpotVM.latitude.isEmpty {
-                    buildMapThumbnailView()
-                }
-
                 if isNew || isEditingMode {
                     buildInputView()
                 } else {
@@ -43,9 +44,11 @@ struct MySpotView: View {
 
                 if !isNew { buildDeleteSpotButton() }
             }
+            .scrollIndicators(.hidden)
             .scrollContentBackground(.hidden)
             .animation(.easeInOut, value: isEditingMode)
             .if(isNew) { $0.offset(y: 25) }
+            .padding(.bottom, 30)
 
             if isNew { buildSheetToolbar() }
         }
@@ -74,8 +77,7 @@ struct MySpotView: View {
             SubMapView(
                 isPresented: $shouldShowMapThumbnail,
                 mapMode: MapMode.showing)
-            .frame(height: 250)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .frame(height: MapMode.showing.height)
         }
         .fullScreenCover(isPresented: $isSearchingModeByMapButton) {
             SubMapView(isPresented: $isSearchingModeByMapButton, mapMode: MapMode.searching)
@@ -85,22 +87,136 @@ struct MySpotView: View {
     }
 
     private func buildOutputView() -> some View {
-        Section {
-            LabeledContent { Text(mySpotVM.name) } label: { Text("장소명") }
-            LabeledContent { Text(mySpotVM.address) } label: { Text("위치") }
+        Group {
+            Section {
+                LabeledContent { Text(mySpotVM.name) } label: { Text("장소명") }
+                LabeledContent { Text(mySpotVM.address) } label: { Text("위치") }
+                if !mySpotVM.longitude.isEmpty && !mySpotVM.latitude.isEmpty {
+                    buildMapThumbnailView()
+                }
+            }
+            
+            if let photo = mySpotVM.photo {
+                Section {
+                    Text("사진").bold()
+                    buildPhotoThumbnailView()
+                        .listRowInsets(EdgeInsets())
+                }
+            }
         }
+
     }
 
     private func buildInputView() -> some View {
-        Section {
-            RoundedBorderView(label: "장소명") {
-                TextField("명칭을 입력해주세요", text: $mySpotVM.name)
+        Group {
+            Section {
+                RoundedBorderView(label: "장소명", isRequired: true) {
+                    TextField("명칭을 입력해주세요", text: $mySpotVM.name)
+                }
+
+                RoundedBorderView(label: "위치", isRequired: true) {
+                    buildSearchAddressButton()
+                }
+
+                if !mySpotVM.longitude.isEmpty && !mySpotVM.latitude.isEmpty {
+                    buildMapThumbnailView()
+                }
             }
 
-            RoundedBorderView(label: "위치") {
-                buildSearchAddressButton()
+            Section {
+                buildPhotoListRowView()
             }
         }
+    }
+
+    @ViewBuilder private func buildPhotoListRowView() -> some View {
+        if mySpotVM.photo == nil {
+            RoundedBorderView(label: "사진") {
+                buildAddPhotoButton()
+            }
+        } else {
+            Group{
+                Text("사진").bold()
+                buildPhotoThumbnailView()
+                    .listRowInsets(EdgeInsets())
+            }
+        }
+    }
+
+    private func buildAddPhotoButton() -> some View {
+        Menu {
+            Button {
+                shouldShowPhotosPicker.toggle()
+            } label: {
+                Label("사진 보관함", systemImage: "photo")
+            }
+            Button {
+
+            } label: {
+                Label("사진 찍기", systemImage: "camera")
+            }
+        } label: {
+            HStack {
+                if mySpotVM.photo == nil { Spacer() }
+                Image(systemName: "camera.fill")
+                Text("사진 \(mySpotVM.photo == nil ? "추가" : "변경")")
+                if mySpotVM.photo == nil { Spacer() }
+            }
+            .if(mySpotVM.photo != nil) {
+                $0.padding(.vertical, 10)
+                    .padding(.horizontal, 13)
+                    .foregroundStyle(.white)
+                    .background(.primary)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                    .padding(.bottom)
+            }
+        }
+        .photosPicker(isPresented: $shouldShowPhotosPicker,
+                      selection: $selectedPhoto,
+                      matching: .images)
+        .task(id: selectedPhoto) {
+            if let selectedPhoto {
+                await mySpotVM.setPhoto(from: selectedPhoto)
+            }
+        }
+    }
+
+    @ViewBuilder private func buildPhotoThumbnailView() -> some View {
+        if let photo = mySpotVM.photo,
+           let uiImage = UIImage(data: photo) {
+            Image(uiImage: uiImage)
+                .resizable()
+                .frame(minWidth: 0, maxWidth: .infinity)
+                .frame(height: 250)
+                .if(isEditingMode || isNew) {
+                    $0.overlay(alignment: .bottom) {
+                        buildAddPhotoButton()
+                    }
+                    .overlay(alignment: .topTrailing) {
+                        buildDeletePhotoButton()
+                    }
+                }
+        }
+    }
+
+    private func buildDeletePhotoButton() -> some View {
+        HStack {
+            Spacer()
+            Button {
+                selectedPhoto = nil
+                mySpotVM.photo = nil
+            } label: {
+                Image(systemName: "trash")
+                    .bold()
+                    .padding(10)
+                    .background(.red)
+                    .foregroundStyle(.white)
+                    .clipShape(Circle())
+                    .padding(.trailing, 10)
+                    .padding(.top, 10)
+            }
+        }
+
     }
 
     private func buildSearchAddressButton() -> some View {
