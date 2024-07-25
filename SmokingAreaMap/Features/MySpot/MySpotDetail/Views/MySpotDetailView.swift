@@ -16,12 +16,9 @@ struct MySpotDetailView: View {
 
     @State private var isNew = false
     @State private var isEditingMode = false
+    @State private var isSearchingMode = false
     @State private var shouldDelete = false
 
-    @State private var isSearchingModeByTextButton = false
-    @State private var isSearchingModeByMapButton = false
-
-    @State private var shouldShowMapThumbnail = false
     @State private var shouldShowPhotosPicker = false
     @State private var shouldShowCamera = false
     @State private var selectedPhoto: PhotosPickerItem?
@@ -50,6 +47,9 @@ struct MySpotDetailView: View {
             .animation(.easeInOut, value: isEditingMode)
             .if(isNew) { $0.offset(y: 25) }
             .padding(.bottom, 30)
+            .fullScreenCover(isPresented: $isSearchingMode) {
+                SubMapView(mapMode: MapMode.searching)
+            }
 
             if isNew { buildSheetToolbar() }
         }
@@ -67,24 +67,6 @@ struct MySpotDetailView: View {
                 .font(.footnote)
             Spacer()
         }
-    }
-
-    private func buildMapThumbnailView() -> some View {
-        Button {
-            if isEditingMode {
-                isSearchingModeByMapButton = true
-            }
-        } label: {
-            SubMapView(
-                isPresented: $shouldShowMapThumbnail,
-                mapMode: MapMode.showing)
-            .frame(height: MapMode.showing.height)
-        }
-        .fullScreenCover(isPresented: $isSearchingModeByMapButton) {
-            SubMapView(isPresented: $isSearchingModeByMapButton, mapMode: MapMode.searching)
-        }
-        .disabled(!isEditingMode)
-        .listRowInsets(EdgeInsets())
     }
 
     private func buildOutputView() -> some View {
@@ -106,7 +88,7 @@ struct MySpotDetailView: View {
             }
         }
     }
-
+    
     private func buildInputView() -> some View {
         Group {
             Section {
@@ -127,6 +109,17 @@ struct MySpotDetailView: View {
                 buildPhotoListRowView()
             }
         }
+    }
+
+    private func buildMapThumbnailView() -> some View {
+        Button {
+            isSearchingMode.toggle()
+        } label: {
+            SubMapView(mapMode: MapMode.showing)
+            .frame(height: MapMode.showing.height)
+        }
+        .disabled(!isNew && !isEditingMode)
+        .listRowInsets(EdgeInsets())
     }
 
     @ViewBuilder
@@ -151,6 +144,7 @@ struct MySpotDetailView: View {
             } label: {
                 Label("사진 보관함", systemImage: "photo")
             }
+
             Button {
                 shouldShowCamera.toggle()
             } label: {
@@ -232,7 +226,7 @@ struct MySpotDetailView: View {
         let hasAddress = !mySpotVM.address.isEmpty
 
         return Button {
-            isSearchingModeByTextButton = true
+            isSearchingMode.toggle()
         } label: {
             HStack {
                 Text(hasAddress ? mySpotVM.address : "여기를 눌러 주소를 검색하세요.")
@@ -240,8 +234,6 @@ struct MySpotDetailView: View {
                 Image(systemName: "chevron.right")
                     .foregroundStyle(hasAddress ? .gray : .blue)
             }
-        }.fullScreenCover(isPresented: $isSearchingModeByTextButton) {
-            SubMapView(isPresented: $isSearchingModeByTextButton, mapMode: MapMode.searching)
         }
     }
 

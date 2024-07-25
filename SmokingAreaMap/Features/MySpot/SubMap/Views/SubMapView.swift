@@ -9,7 +9,7 @@ import SwiftUI
 
 struct SubMapView: View {
     @EnvironmentObject var mySpotVM: MySpotDetailViewModel
-    @Binding var isPresented: Bool
+    @Environment(\.presentationMode) var isPresented
     let mapMode: MapMode
 
     @State private var isAppear = false
@@ -57,11 +57,11 @@ struct SubMapView: View {
 
     private func buildHeaderView() -> some View {
         HStack {
-            Button("취소") { isPresented = false }
+            Button("취소") { isPresented.wrappedValue.dismiss() }
             Spacer()
             Button("저장") {
                 mySpotVM.setLocation()
-                isPresented = false
+                isPresented.wrappedValue.dismiss()
             }
         }
         .padding()
