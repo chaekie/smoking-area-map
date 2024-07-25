@@ -23,6 +23,7 @@ struct MySpotDetailView: View {
 
     @State private var shouldShowMapThumbnail = false
     @State private var shouldShowPhotosPicker = false
+    @State private var shouldShowCamera = false
     @State private var selectedPhoto: PhotosPickerItem?
 
     init(spot: MySpot? = nil, isCreatingNew: Binding<Bool?> = .constant(nil)) {
@@ -104,7 +105,6 @@ struct MySpotDetailView: View {
                 }
             }
         }
-
     }
 
     private func buildInputView() -> some View {
@@ -129,7 +129,8 @@ struct MySpotDetailView: View {
         }
     }
 
-    @ViewBuilder private func buildPhotoListRowView() -> some View {
+    @ViewBuilder
+    private func buildPhotoListRowView() -> some View {
         if mySpotVM.photo == nil {
             RoundedBorderView(label: "사진") {
                 buildAddPhotoButton()
@@ -151,25 +152,12 @@ struct MySpotDetailView: View {
                 Label("사진 보관함", systemImage: "photo")
             }
             Button {
-
+                shouldShowCamera.toggle()
             } label: {
                 Label("사진 찍기", systemImage: "camera")
             }
         } label: {
-            HStack {
-                if mySpotVM.photo == nil { Spacer() }
-                Image(systemName: "camera.fill")
-                Text("사진 \(mySpotVM.photo == nil ? "추가" : "변경")")
-                if mySpotVM.photo == nil { Spacer() }
-            }
-            .if(mySpotVM.photo != nil) {
-                $0.padding(.vertical, 10)
-                    .padding(.horizontal, 13)
-                    .foregroundStyle(.white)
-                    .background(.primary)
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                    .padding(.bottom)
-            }
+            buildMenuLabel()
         }
         .photosPicker(isPresented: $shouldShowPhotosPicker,
                       selection: $selectedPhoto,
@@ -179,9 +167,31 @@ struct MySpotDetailView: View {
                 await mySpotVM.setPhoto(from: selectedPhoto)
             }
         }
+        .fullScreenCover(isPresented: $shouldShowCamera) {
+            AccessCameraView(selectedPhoto: $mySpotVM.photo)
+                .ignoresSafeArea()
+        }
     }
 
-    @ViewBuilder private func buildPhotoThumbnailView() -> some View {
+    private func buildMenuLabel() -> some View {
+        HStack {
+            if mySpotVM.photo == nil { Spacer() }
+            Image(systemName: "camera.fill")
+            Text("사진 \(mySpotVM.photo == nil ? "추가" : "변경")")
+            if mySpotVM.photo == nil { Spacer() }
+        }
+        .if(mySpotVM.photo != nil) {
+            $0.padding(.vertical, 10)
+                .padding(.horizontal, 13)
+                .foregroundStyle(.white)
+                .background(.primary)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .padding(.bottom)
+        }
+    }
+
+    @ViewBuilder
+    private func buildPhotoThumbnailView() -> some View {
         if let photo = mySpotVM.photo,
            let uiImage = UIImage(data: photo) {
             Image(uiImage: uiImage)
@@ -216,7 +226,6 @@ struct MySpotDetailView: View {
                     .padding(.top, 10)
             }
         }
-
     }
 
     private func buildSearchAddressButton() -> some View {
@@ -262,7 +271,7 @@ struct MySpotDetailView: View {
             Button("저장") {
                 mySpotVM.createSpot()
                 isCreatingNew = true
-//                dismiss()
+                dismiss()
             }
             .disabled(!mySpotVM.isSaveButtonEnabled)
         }
