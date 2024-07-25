@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ContentView: View {
+struct MapView: View {
     @StateObject private var mapVM = MapViewModel()
     @StateObject private var smokingAreaVM = SmokingAreaViewModel()
 
@@ -18,9 +18,9 @@ struct ContentView: View {
 
     var body: some View {
         NavigationStack {
-            MapView(isAppear: $isAppear,
-                    shouldMove: $shouldMove,
-                    onPoiTapped: onPoiTapped)
+            MapRepresentableView(isAppear: $isAppear,
+                                 shouldMove: $shouldMove,
+                                 onPoiTapped: onPoiTapped)
             .onAppear() {
                 self.isAppear = true
                 smokingAreaVM.getAllSpot()
@@ -32,8 +32,8 @@ struct ContentView: View {
             .ignoresSafeArea()
             .overlay(alignment: .bottomTrailing) {
                 buildPoiSheetView()
-                CurrentLocationButtonView(shouldMove: $shouldMove,
-                                          isLocationAlertPresented: $isLocationAlertPresented)
+                CurrentLocationButton(shouldMove: $shouldMove,
+                                      isLocationAlertPresented: $isLocationAlertPresented)
             }
             .overlay(alignment: .top) {
                 if mapVM.oldDistrictValue.name.isEmpty {
@@ -47,7 +47,7 @@ struct ContentView: View {
                 }
             }
             .toolbar {
-                NavigationLink(destination: MySpotsView()) {
+                NavigationLink(destination: MySpotListView()) {
                     Label("내 장소 보기", systemImage: "list.bullet")
                 }
             }

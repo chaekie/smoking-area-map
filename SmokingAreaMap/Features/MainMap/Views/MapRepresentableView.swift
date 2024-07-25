@@ -1,5 +1,5 @@
 //
-//  MapView.swift
+//  MapRepresentableView.swift
 //  SmokingAreaMap
 //
 //  Created by chaekie on 6/11/24.
@@ -9,7 +9,7 @@ import CoreLocation
 import KakaoMapsSDK
 import SwiftUI
 
-struct MapView: UIViewRepresentable {
+struct MapRepresentableView: UIViewRepresentable {
     @EnvironmentObject var mapVM: MapViewModel
     @EnvironmentObject var smokingAreaVM: SmokingAreaViewModel
 
@@ -17,8 +17,7 @@ struct MapView: UIViewRepresentable {
     @Binding var shouldMove: Bool
 
     var onPoiTapped: () -> Void
-
-    static let mapViewName = "mainMap"
+    
     @Environment(\.scenePhase) var scenePhase
 
     func makeUIView(context: Self.Context) -> KMViewContainer {
@@ -62,14 +61,14 @@ struct MapView: UIViewRepresentable {
 
     private func updateSmokingAreasPoi(_ coordinator: Coordinator) {
         if smokingAreaVM.isSmokingAreasUpdated {
-            coordinator.setPois(smokingAreaVM.smokingAreas, poiInfo: coordinator.spotPoiInfo)
+            coordinator.setPois(smokingAreaVM.smokingAreas, poiInfo: Constants.Map.spotPoiInfo)
             smokingAreaVM.isSmokingAreasUpdated = false
         }
     }
 
     private func updateMySpotsPoi(_ coordinator: Coordinator) {
         if smokingAreaVM.isMySpotUpdated {
-            coordinator.setPois(smokingAreaVM.mySpots, poiInfo: coordinator.mySpotPoiInfo)
+            coordinator.setPois(smokingAreaVM.mySpots, poiInfo: Constants.Map.mySpotPoiInfo)
             smokingAreaVM.isMySpotUpdated = false
         }
     }

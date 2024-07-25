@@ -10,27 +10,14 @@ import KakaoMapsSDK
 import SwiftUI
 
 final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
-    var parent: MapView
+    var parent: MapRepresentableView
     var controller: KMController?
     var auth: Bool
 
     private var cameraStoppedHandler: DisposableEventHandler?
     private var cameraStartHandler: DisposableEventHandler?
 
-    private let defaultPosition = GeoCoordinate(longitude: 126.978365, latitude: 37.566691)
-    let spotPoiInfo = PoiInfo(layer: Layer(id: "spotLayer", zOrder: 10000),
-                              style: Style(id: "spotStyle", symbol: UIImage(named: "pin")),
-                              rank: 5)
-    let mySpotPoiInfo = PoiInfo(layer: Layer(id: "mySpotLayer", zOrder: 10001),
-                                style: Style(id: "mySpotStyle", symbol: UIImage(named: "my_pin")),
-                                rank: 5)
-    private let currentPoiInfo = PoiInfo(layer: Layer(id: "cpLayer", zOrder: 10001),
-                                 style: Style(id: "cpPoiStyle", symbol: UIImage(named: "current_position")),
-                                 rank: 10)
-    private let polygonLayerID = "seoulPolygonLayer"
-    private let polygonStyleID = "seoulPolygonLayer"
-
-    init(parent: MapView) {
+    init(parent: MapRepresentableView) {
         self.parent = parent
         self.auth = false
         super.init()
@@ -45,11 +32,11 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
         let longitude = parent.mapVM.currentLocation.longitude
         let latitude = parent.mapVM.currentLocation.latitude
 
-        let finalLongitude = (longitude != 0.0) ? longitude : defaultPosition.longitude
-        let finalLatitude = (latitude != 0.0) ? latitude : defaultPosition.latitude
+        let finalLongitude = (longitude != 0.0) ? longitude : Constants.Map.defaultPosition.longitude
+        let finalLatitude = (latitude != 0.0) ? latitude : Constants.Map.defaultPosition.latitude
 
         let mapviewInfo = MapviewInfo(
-            viewName: MapView.mapViewName,
+            viewName: Constants.Map.mainMapName,
             defaultPosition: MapPoint(longitude: finalLongitude, latitude: finalLatitude)
         )
 
@@ -61,18 +48,18 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
         let labelManager = view.getLabelManager()
         let shapeManager = view.getShapeManager()
 
-        [currentPoiInfo, spotPoiInfo, mySpotPoiInfo].forEach { poiInfo in
+        [Constants.Map.currentPoiInfo, Constants.Map.spotPoiInfo, Constants.Map.mySpotPoiInfo].forEach { poiInfo in
             createLabelLayer(labelManager, poiInfo: poiInfo)
             createPoiStyle(labelManager, poiInfo: poiInfo)
         }
 
         setCurrentPosiotionPoi(labelManager)
-        setPois(parent.smokingAreaVM.mySpots, poiInfo: mySpotPoiInfo)
+        setPois(parent.smokingAreaVM.mySpots, poiInfo: Constants.Map.mySpotPoiInfo)
 
-        createPolygonStyleSet(shapeManager, styleID: polygonStyleID)
+        createPolygonStyleSet(shapeManager, styleID: Constants.Map.polygonStyleID)
         let polygonData = getDistrictPolygonData()
         polygonData.forEach { polygon in
-            createMapPolygonShape(shapeManager, polygon: polygon, layerID: polygonLayerID, styleID: polygonStyleID)
+            createMapPolygonShape(shapeManager, polygon: polygon, layerID: Constants.Map.polygonLayerID, styleID: Constants.Map.polygonStyleID)
         }
 
         setUpCamera(view)
@@ -97,7 +84,7 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     }
 
     private func setCurrentPosiotionPoi(_ manager: LabelManager) {
-        parent.mapVM.currentPositionPoi = createPois(manager, poiInfo: currentPoiInfo, location: parent.mapVM.currentLocation)
+        parent.mapVM.currentPositionPoi = createPois(manager, poiInfo: Constants.Map.currentPoiInfo, location: parent.mapVM.currentLocation)
         parent.mapVM.currentPositionPoi?.show()
     }
 
@@ -111,7 +98,7 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     }
 
     func setPois<T: SpotPoi>(_ mySpots: [T], poiInfo: PoiInfo) {
-        guard let view = controller?.getView(MapView.mapViewName) as? KakaoMap else { return }
+        guard let view = controller?.getView(Constants.Map.mainMapName) as? KakaoMap else { return }
         let manager = view.getLabelManager()
         if let layer = manager.getLabelLayer(layerID: poiInfo.layer.id) {
             layer.clearAllItems()
@@ -180,7 +167,7 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     }
 
     func moveCamera(to location: GeoCoordinate) {
-        guard let view = controller?.getView(MapView.mapViewName) as? KakaoMap else { return }
+        guard let view = controller?.getView(Constants.Map.mainMapName) as? KakaoMap else { return }
 
         let cameraUpdate = CameraUpdate.make(
             target: MapPoint(longitude: location.longitude, latitude: location.latitude),
@@ -202,7 +189,7 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
                   let district = await parent.smokingAreaVM.getDistrictInfo(by: address.gu) else { return }
 
             await parent.smokingAreaVM.fetchSmokingArea(district: district)
-            await setPois(parent.smokingAreaVM.smokingAreas, poiInfo: spotPoiInfo)
+            await setPois(parent.smokingAreaVM.smokingAreas, poiInfo: Constants.Map.spotPoiInfo)
             await MainActor.run {
                 parent.mapVM.oldDistrictValue = district
                 parent.mapVM.newDistrictValue = district
@@ -250,7 +237,7 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
 
     private func updateFocusedPolygon(_ view: KakaoMap, district: DistrictInfo?) {
         let manager = view.getShapeManager()
-        let layer = manager.getShapeLayer(layerID: polygonLayerID)
+        let layer = manager.getShapeLayer(layerID: Constants.Map.polygonLayerID)
 
         guard let district else {
             layer?.hideAllPolygonShapes()
@@ -268,9 +255,9 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     }
 
     func hideAllPolygons() {
-        guard let view = controller?.getView(MapView.mapViewName) as? KakaoMap else { return }
+        guard let view = controller?.getView(Constants.Map.mainMapName) as? KakaoMap else { return }
         let manager = view.getShapeManager()
-        let layer = manager.getShapeLayer(layerID: polygonLayerID)
+        let layer = manager.getShapeLayer(layerID: Constants.Map.polygonLayerID)
         layer?.hideAllPolygonShapes()
     }
 
@@ -310,32 +297,16 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     }
 
     func containerDidResized(_ size: CGSize) {
-        let mapView = controller?.getView(MapView.mapViewName) as? KakaoMap
+        let mapView = controller?.getView(Constants.Map.mainMapName) as? KakaoMap
         mapView?.viewRect = CGRect(origin: CGPoint(x: 0.0, y: 0.0), size: size)
         if parent.isAppear {
             let cameraUpdate = CameraUpdate.make(target: MapPoint(
-                longitude: defaultPosition.longitude,
-                latitude: defaultPosition.latitude
+                longitude: Constants.Map.defaultPosition.longitude,
+                latitude: Constants.Map.defaultPosition.latitude
             ), mapView: mapView!)
             mapView?.moveCamera(cameraUpdate)
             parent.isAppear = false
         }
-    }
-
-    struct PoiInfo {
-        var layer: Layer
-        var style: Style
-        var rank: Int
-    }
-
-    struct Layer {
-        var id: String
-        var zOrder: Int
-    }
-
-    struct Style {
-        var id: String
-        var symbol: UIImage?
     }
 }
 

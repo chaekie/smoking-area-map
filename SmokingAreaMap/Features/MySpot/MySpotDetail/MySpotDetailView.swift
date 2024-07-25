@@ -1,5 +1,5 @@
 //
-//  MySpotView.swift
+//  MySpotDetailView.swift
 //  SmokingAreaMap
 //
 //  Created by chaekie on 7/16/24.
@@ -8,9 +8,9 @@
 import PhotosUI
 import SwiftUI
 
-struct MySpotView: View {
+struct MySpotDetailView: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject var mySpotVM: MySpotViewModel
+    @StateObject var mySpotVM: MySpotDetailViewModel
 
     @Binding var isCreatingNew: Bool?
 
@@ -27,7 +27,7 @@ struct MySpotView: View {
 
     init(spot: MySpot? = nil, isCreatingNew: Binding<Bool?> = .constant(nil)) {
         if spot == nil { isNew = true }
-        self._mySpotVM = StateObject(wrappedValue: MySpotViewModel(spot))
+        self._mySpotVM = StateObject(wrappedValue: MySpotDetailViewModel(spot))
         self._isCreatingNew = isCreatingNew
     }
 
@@ -95,8 +95,8 @@ struct MySpotView: View {
                     buildMapThumbnailView()
                 }
             }
-            
-            if let photo = mySpotVM.photo {
+
+            if mySpotVM.photo != nil {
                 Section {
                     Text("사진").bold()
                     buildPhotoThumbnailView()
@@ -262,7 +262,7 @@ struct MySpotView: View {
             Button("저장") {
                 mySpotVM.createSpot()
                 isCreatingNew = true
-                dismiss()
+//                dismiss()
             }
             .disabled(!mySpotVM.isSaveButtonEnabled)
         }
@@ -296,5 +296,5 @@ struct MySpotView: View {
 }
 
 #Preview {
-    MySpotView()
+    MySpotDetailView()
 }

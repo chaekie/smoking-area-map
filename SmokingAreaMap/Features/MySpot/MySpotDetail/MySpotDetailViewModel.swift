@@ -1,5 +1,5 @@
 //
-//  MySpotViewModel.swift
+//  MySpotDetailViewModel.swift
 //  SmokingAreaMap
 //
 //  Created by chaekie on 7/16/24.
@@ -10,7 +10,7 @@ import Foundation
 import PhotosUI
 import SwiftUI
 
-final class MySpotViewModel: ObservableObject {
+final class MySpotDetailViewModel: ObservableObject {
     @Published var spot: MySpot?
     @Published var address: String
     @Published var name: String
@@ -60,6 +60,7 @@ final class MySpotViewModel: ObservableObject {
             self.name = ""
             self.longitude = ""
             self.latitude = ""
+            self.photo = nil
 
             Publishers.CombineLatest4($address, $name, $longitude, $latitude)
                 .debounce(for: 0.3, scheduler: DispatchQueue.main)
@@ -79,14 +80,13 @@ final class MySpotViewModel: ObservableObject {
 
     func createSpot() {
         guard let longitude = Double(longitude),
-              let latitude = Double(latitude),
-              let photo else { return }
+              let latitude = Double(latitude) else { return }
 
         dataService.create(name: self.name,
                            address: self.address,
                            longitude: longitude,
                            latitude: latitude,
-                           photo: photo)
+                           photo: self.photo)
     }
 
     func updateSpot(_ spot: MySpot) {

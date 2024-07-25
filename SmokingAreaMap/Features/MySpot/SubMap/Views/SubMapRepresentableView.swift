@@ -12,7 +12,7 @@ import SwiftUI
 struct SubMapRepresentableView: UIViewRepresentable {
     @EnvironmentObject var mapVM: MapViewModel
     @EnvironmentObject var smokingAreaVM: SmokingAreaViewModel
-    @EnvironmentObject var mySpotVM: MySpotViewModel
+    @EnvironmentObject var mySpotVM: MySpotDetailViewModel
     
     @Binding var isAppear: Bool
     @Binding var shouldMove: Bool

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SubMapView: View {
-    @EnvironmentObject var mySpotVM: MySpotViewModel
+    @EnvironmentObject var mySpotVM: MySpotDetailViewModel
     @Binding var isPresented: Bool
     let mapMode: MapMode
 
@@ -44,7 +44,7 @@ struct SubMapView: View {
                 buildFooterView()
             }
             .overlay(alignment: .bottomTrailing) {
-                CurrentLocationButtonView(shouldMove: $shouldMove,
+                CurrentLocationButton(shouldMove: $shouldMove,
                                           isLocationAlertPresented: $isLocationAlertPresented)
             }
             .overlay(alignment: .center) {

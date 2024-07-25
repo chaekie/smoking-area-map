@@ -1,5 +1,5 @@
 //
-//  CurrentLocationButtonView.swift
+//  CurrentLocationButton.swift
 //  SmokingAreaMap
 //
 //  Created by chaekie on 7/23/24.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CurrentLocationButtonView: View {
+struct CurrentLocationButton: View {
     @EnvironmentObject var mapVM: MapViewModel
     @Binding var shouldMove: Bool
     @Binding var isLocationAlertPresented: Bool

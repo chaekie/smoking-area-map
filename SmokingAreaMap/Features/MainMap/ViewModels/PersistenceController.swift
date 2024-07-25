@@ -42,7 +42,7 @@ class PersistenceController {
                 address: String,
                 longitude: Double,
                 latitude: Double,
-                photo: Data) {
+                photo: Data?) {
         let entity = MySpot(context: container.viewContext)
         entity.id = UUID()
         entity.createdAt = Date()

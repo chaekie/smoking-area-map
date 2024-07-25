@@ -9,8 +9,6 @@ import Foundation
 import KakaoMapsSDK
 
 class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate {
-    private let defaultPosition = GeoCoordinate(longitude: 126.978365, latitude: 37.566691)
-
     var parent: SubMapRepresentableView
     var controller: KMController?
 
@@ -30,8 +28,8 @@ class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate 
     }
 
     func addViews() {
-        let longitude = Double(parent.mySpotVM.longitude) ?? defaultPosition.longitude
-        let latitude = Double(parent.mySpotVM.latitude) ?? defaultPosition.latitude
+        let longitude = Double(parent.mySpotVM.longitude) ?? Constants.Map.defaultPosition.longitude
+        let latitude = Double(parent.mySpotVM.latitude) ?? Constants.Map.defaultPosition.latitude
 
         let mapviewInfo = MapviewInfo(
             viewName: parent.mapMode.name,
