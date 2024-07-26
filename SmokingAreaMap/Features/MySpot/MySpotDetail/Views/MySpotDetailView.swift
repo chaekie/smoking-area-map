@@ -24,7 +24,7 @@ struct MySpotDetailView: View {
     @State private var shouldShowCamera = false
     @State private var selectedPhoto: PhotosPickerItem?
 
-    init(spot: MySpot? = nil, 
+    init(spot: MySpot? = nil,
          isCreatingNew: Binding<Bool?> = .constant(nil)) {
         if spot == nil { isNew = true }
         self._mySpotVM = StateObject(wrappedValue: MySpotDetailViewModel(spot))
@@ -49,6 +49,9 @@ struct MySpotDetailView: View {
             .animation(.easeInOut, value: isEditingMode)
             .if(isNew) { $0.offset(y: 25) }
             .padding(.bottom, 30)
+            .simultaneousGesture(TapGesture().onEnded { _ in
+                if isFocused { isFocused = false }
+            })
             .fullScreenCover(isPresented: $isSearchingMode) {
                 SubMapView(mapMode: MapMode.searching)
             }
@@ -90,7 +93,7 @@ struct MySpotDetailView: View {
             }
         }
     }
-    
+
     private func buildInputView() -> some View {
         Group {
             Section {
@@ -115,15 +118,15 @@ struct MySpotDetailView: View {
     }
 
     private func buildMapThumbnailView() -> some View {
-        Button {
-            isFocused = false
-            isSearchingMode.toggle()
-        } label: {
+        Button {} label: {
             SubMapView(mapMode: MapMode.showing)
-            .frame(height: MapMode.showing.height)
+                .frame(height: MapMode.showing.height)
         }
         .disabled(!isNew && !isEditingMode)
         .listRowInsets(EdgeInsets())
+        .onTapGesture {
+            isSearchingMode.toggle()
+        }
     }
 
     @ViewBuilder
@@ -210,10 +213,7 @@ struct MySpotDetailView: View {
     private func buildDeletePhotoButton() -> some View {
         HStack {
             Spacer()
-            Button {
-                selectedPhoto = nil
-                mySpotVM.photo = nil
-            } label: {
+            Button {} label: {
                 Image(systemName: "trash")
                     .bold()
                     .padding(10)
@@ -223,22 +223,26 @@ struct MySpotDetailView: View {
                     .padding(.trailing, 10)
                     .padding(.top, 10)
             }
+            .onTapGesture {
+                selectedPhoto = nil
+                mySpotVM.photo = nil
+            }
         }
     }
 
     private func buildSearchAddressButton() -> some View {
         let hasAddress = !mySpotVM.address.isEmpty
 
-        return Button {
-            isFocused = false
-            isSearchingMode.toggle()
-        } label: {
+        return Button {} label: {
             HStack {
                 Text(hasAddress ? mySpotVM.address : "여기를 눌러 주소를 검색하세요.")
                 Spacer()
                 Image(systemName: "chevron.right")
                     .foregroundStyle(hasAddress ? .gray : .blue)
             }
+        }
+        .onTapGesture {
+            isSearchingMode.toggle()
         }
     }
 
