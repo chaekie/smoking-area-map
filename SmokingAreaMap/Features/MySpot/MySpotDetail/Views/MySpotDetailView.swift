@@ -13,6 +13,7 @@ struct MySpotDetailView: View {
     @StateObject var mySpotVM: MySpotDetailViewModel
 
     @Binding var isCreatingNew: Bool?
+    @FocusState private var isFocused: Bool
 
     @State private var isNew = false
     @State private var isEditingMode = false
@@ -23,7 +24,8 @@ struct MySpotDetailView: View {
     @State private var shouldShowCamera = false
     @State private var selectedPhoto: PhotosPickerItem?
 
-    init(spot: MySpot? = nil, isCreatingNew: Binding<Bool?> = .constant(nil)) {
+    init(spot: MySpot? = nil, 
+         isCreatingNew: Binding<Bool?> = .constant(nil)) {
         if spot == nil { isNew = true }
         self._mySpotVM = StateObject(wrappedValue: MySpotDetailViewModel(spot))
         self._isCreatingNew = isCreatingNew
@@ -94,6 +96,7 @@ struct MySpotDetailView: View {
             Section {
                 RoundedBorderView(label: "장소명", isRequired: true) {
                     TextField("명칭을 입력해주세요", text: $mySpotVM.name)
+                        .focused($isFocused)
                 }
 
                 RoundedBorderView(label: "위치", isRequired: true) {
@@ -113,6 +116,7 @@ struct MySpotDetailView: View {
 
     private func buildMapThumbnailView() -> some View {
         Button {
+            isFocused = false
             isSearchingMode.toggle()
         } label: {
             SubMapView(mapMode: MapMode.showing)
@@ -129,7 +133,7 @@ struct MySpotDetailView: View {
                 buildAddPhotoButton()
             }
         } else {
-            Group{
+            Group {
                 Text("사진").bold()
                 buildPhotoThumbnailView()
                     .listRowInsets(EdgeInsets())
@@ -226,6 +230,7 @@ struct MySpotDetailView: View {
         let hasAddress = !mySpotVM.address.isEmpty
 
         return Button {
+            isFocused = false
             isSearchingMode.toggle()
         } label: {
             HStack {
