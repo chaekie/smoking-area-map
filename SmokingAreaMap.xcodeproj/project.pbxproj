@@ -26,6 +26,8 @@
 		514E2EE32C50A41100C86AB9 /* +View.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514E2EE22C50A41100C86AB9 /* +View.swift */; };
 		514E2EFA2C522A6800C86AB9 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514E2EF92C522A6800C86AB9 /* Constants.swift */; };
 		514E2EFC2C52463900C86AB9 /* AccessCameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514E2EFB2C52463900C86AB9 /* AccessCameraView.swift */; };
+		514E2EFF2C563DD200C86AB9 /* MySpotViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514E2EFE2C563DD200C86AB9 /* MySpotViewModel.swift */; };
+		514E2F032C576BD300C86AB9 /* ModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 514E2F022C576BD300C86AB9 /* ModalView.swift */; };
 		5177DEFD2C292BB9003D8701 /* SmokingAreaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */; };
 		5177DEFF2C292E77003D8701 /* SmokingArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFE2C292E77003D8701 /* SmokingArea.swift */; };
 		5177DF052C2A7B0F003D8701 /* ErrorKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DF042C2A7B0F003D8701 /* ErrorKind.swift */; };
@@ -34,9 +36,7 @@
 		51889BFC2C4F9D55009996F2 /* CurrentLocationButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51889BFB2C4F9D55009996F2 /* CurrentLocationButton.swift */; };
 		51D2DBCE2C4501C30019D4B1 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBCD2C4501C30019D4B1 /* PersistenceController.swift */; };
 		51D2DBD02C450A920019D4B1 /* MySpotListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBCF2C450A920019D4B1 /* MySpotListView.swift */; };
-		51D2DBD22C461F6E0019D4B1 /* MySpotDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBD12C461F6E0019D4B1 /* MySpotDetailViewModel.swift */; };
 		51D2DBD72C46ADC60019D4B1 /* MySpotDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBD62C46ADC60019D4B1 /* MySpotDetailView.swift */; };
-		51D2DBD92C46B44C0019D4B1 /* MySpotListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBD82C46B44C0019D4B1 /* MySpotListViewModel.swift */; };
 		51D2DBDB2C4777C10019D4B1 /* DeferView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DBDA2C4777C00019D4B1 /* DeferView.swift */; };
 		51D2DC022C479A330019D4B1 /* MySpot.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DC002C479A330019D4B1 /* MySpot.xcdatamodeld */; };
 		51D2DC092C479DD00019D4B1 /* MySpot+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51D2DC072C479DD00019D4B1 /* MySpot+CoreDataClass.swift */; };
@@ -68,6 +68,8 @@
 		514E2EE22C50A41100C86AB9 /* +View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "+View.swift"; sourceTree = "<group>"; };
 		514E2EF92C522A6800C86AB9 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		514E2EFB2C52463900C86AB9 /* AccessCameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessCameraView.swift; sourceTree = "<group>"; };
+		514E2EFE2C563DD200C86AB9 /* MySpotViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MySpotViewModel.swift; sourceTree = "<group>"; };
+		514E2F022C576BD300C86AB9 /* ModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModalView.swift; sourceTree = "<group>"; };
 		5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingAreaViewModel.swift; sourceTree = "<group>"; };
 		5177DEFE2C292E77003D8701 /* SmokingArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingArea.swift; sourceTree = "<group>"; };
 		5177DF042C2A7B0F003D8701 /* ErrorKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorKind.swift; sourceTree = "<group>"; };
@@ -76,9 +78,7 @@
 		51889BFB2C4F9D55009996F2 /* CurrentLocationButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentLocationButton.swift; sourceTree = "<group>"; };
 		51D2DBCD2C4501C30019D4B1 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		51D2DBCF2C450A920019D4B1 /* MySpotListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MySpotListView.swift; sourceTree = "<group>"; };
-		51D2DBD12C461F6E0019D4B1 /* MySpotDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MySpotDetailViewModel.swift; sourceTree = "<group>"; };
 		51D2DBD62C46ADC60019D4B1 /* MySpotDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MySpotDetailView.swift; sourceTree = "<group>"; };
-		51D2DBD82C46B44C0019D4B1 /* MySpotListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MySpotListViewModel.swift; sourceTree = "<group>"; };
 		51D2DBDA2C4777C00019D4B1 /* DeferView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeferView.swift; sourceTree = "<group>"; };
 		51D2DC012C479A330019D4B1 /* MySpot.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = MySpot.xcdatamodel; sourceTree = "<group>"; };
 		51D2DC072C479DD00019D4B1 /* MySpot+CoreDataClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MySpot+CoreDataClass.swift"; sourceTree = "<group>"; };
@@ -153,6 +153,7 @@
 		514E2EE52C50FD3900C86AB9 /* MySpot */ = {
 			isa = PBXGroup;
 			children = (
+				514E2EFE2C563DD200C86AB9 /* MySpotViewModel.swift */,
 				514E2EF62C52225A00C86AB9 /* MySpotList */,
 				514E2EF72C52226100C86AB9 /* MySpotDetail */,
 				514E2EF82C52226E00C86AB9 /* SubMap */,
@@ -250,7 +251,6 @@
 			isa = PBXGroup;
 			children = (
 				51D2DBCF2C450A920019D4B1 /* MySpotListView.swift */,
-				51D2DBD82C46B44C0019D4B1 /* MySpotListViewModel.swift */,
 			);
 			path = MySpotList;
 			sourceTree = "<group>";
@@ -259,7 +259,6 @@
 			isa = PBXGroup;
 			children = (
 				514E2EFD2C524B1800C86AB9 /* Views */,
-				51D2DBD12C461F6E0019D4B1 /* MySpotDetailViewModel.swift */,
 			);
 			path = MySpotDetail;
 			sourceTree = "<group>";
@@ -301,6 +300,7 @@
 				51D2DBDA2C4777C00019D4B1 /* DeferView.swift */,
 				51D2DC132C4A486E0019D4B1 /* CenterContainerView.swift */,
 				51889BFB2C4F9D55009996F2 /* CurrentLocationButton.swift */,
+				514E2F022C576BD300C86AB9 /* ModalView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -402,17 +402,17 @@
 				51D2DBD72C46ADC60019D4B1 /* MySpotDetailView.swift in Sources */,
 				5177DEFF2C292E77003D8701 /* SmokingArea.swift in Sources */,
 				51D2DBCE2C4501C30019D4B1 /* PersistenceController.swift in Sources */,
+				514E2F032C576BD300C86AB9 /* ModalView.swift in Sources */,
+				514E2EFF2C563DD200C86AB9 /* MySpotViewModel.swift in Sources */,
 				51D2DC092C479DD00019D4B1 /* MySpot+CoreDataClass.swift in Sources */,
 				51D2DC0A2C479DD00019D4B1 /* MySpot+CoreDataProperties.swift in Sources */,
 				5177DEFD2C292BB9003D8701 /* SmokingAreaViewModel.swift in Sources */,
 				51D2DBD02C450A920019D4B1 /* MySpotListView.swift in Sources */,
-				51D2DBD22C461F6E0019D4B1 /* MySpotDetailViewModel.swift in Sources */,
 				512083922C37824C00F12295 /* District.swift in Sources */,
 				513F45B72C3BDC7A00743318 /* +Sequence.swift in Sources */,
 				514E2EE32C50A41100C86AB9 /* +View.swift in Sources */,
 				51263D332C16D2BD0009509F /* SmokingAreaMapApp.swift in Sources */,
 				512083842C2D095D00F12295 /* MapViewModel.swift in Sources */,
-				51D2DBD92C46B44C0019D4B1 /* MySpotListViewModel.swift in Sources */,
 				51D2DBDB2C4777C10019D4B1 /* DeferView.swift in Sources */,
 				51889BF72C4E42E8009996F2 /* MapMode.swift in Sources */,
 			);

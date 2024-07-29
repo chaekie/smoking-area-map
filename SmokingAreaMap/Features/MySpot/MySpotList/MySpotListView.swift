@@ -10,8 +10,12 @@ import SwiftUI
 struct MySpotListView: View {
     @Environment(\.dismiss) var dismiss
     @StateObject var mySpotVM = MySpotViewModel()
-    @State private var isPresented = false
     @State private var shouldAlert = false
+    @State private var isPresented = false {
+        didSet {
+            if !isPresented { shouldAlert = false }
+        }
+    }
 
     var body: some View {
         VStack {
@@ -46,6 +50,10 @@ struct MySpotListView: View {
             MySpotDetailView(isPresented: $isPresented,
                              shouldAlert: $shouldAlert)
             .environmentObject(mySpotVM)
+            .onDismissPrevent(isPresented: isPresented,
+                              shouldPreventDismissal: mySpotVM.isEditing) {
+                shouldAlert = true
+            }
         }
     }
 

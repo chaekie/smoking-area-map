@@ -15,4 +15,13 @@ extension View {
             self
         }
     }
+
+    func onDismissPrevent(isPresented: Bool,
+                          shouldPreventDismissal: Bool,
+                          onDismissalAttempt: (() -> Void)? = nil) -> some View {
+        ModalView(view: self,
+                  isPresented: isPresented,
+                  shouldPreventDismissal: shouldPreventDismissal,
+                  onDismissalAttempt: onDismissalAttempt)
+    }
 }

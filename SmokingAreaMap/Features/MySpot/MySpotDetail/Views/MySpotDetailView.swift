@@ -39,18 +39,17 @@ struct MySpotDetailView: View {
             if let spot = mySpotVM.spot { buildCreatedDateView(spot) }
 
             List {
-                if let spot = mySpotVM.spot {
-                    if mySpotVM.isEditingMode {
+                if isNew || mySpotVM.isEditingMode {
                         buildInputView()
                     } else {
-                        buildOutputView(spot)
+                        if let spot = mySpotVM.spot {
+                            buildOutputView(spot)
+                        }
                     }
 
-                } else {
-                    buildInputView()
+                if let spot = mySpotVM.spot { 
+                    buildDeleteSpotButton(spot)
                 }
-
-                if let spot = mySpotVM.spot { buildDeleteSpotButton(spot) }
             }
             .scrollIndicators(.hidden)
             .scrollContentBackground(.hidden)
@@ -60,21 +59,6 @@ struct MySpotDetailView: View {
             .simultaneousGesture(TapGesture().onEnded { _ in
                 if isFocused { isFocused = false }
             })
-            .fullScreenCover(isPresented: $isSearchingMode) {
-                SubMapView(mapMode: MapMode.searching)
-            }
-            .confirmationDialog("저장하지 않고 나가기", isPresented: $shouldAlert) {
-                Button("입력 사항 폐기", role: .destructive) {
-                    if isNew {
-                        isPresented = false
-                    } else {
-                        mySpotVM.isEditingMode = false
-                    }
-                }
-                Button("계속 입력하기", role: .cancel) { }
-            } message: {
-                Text("입력한 내용을 폐기하시겠습니까?")
-            }
 
             if isNew { buildSheetToolbar() }
         }
@@ -92,6 +76,21 @@ struct MySpotDetailView: View {
         .toolbar { buildToolbar() }
         .navigationBarBackButtonHidden(mySpotVM.isEditingMode)
         .background(Color(UIColor.secondarySystemBackground))
+        .fullScreenCover(isPresented: $isSearchingMode) {
+            SubMapView(mapMode: MapMode.searching)
+        }
+        .confirmationDialog("저장하지 않고 나가기", isPresented: $shouldAlert) {
+            Button("입력 사항 폐기", role: .destructive) {
+                if isNew {
+                    isPresented = false
+                } else {
+                    mySpotVM.isEditingMode = false
+                }
+            }
+            Button("계속 입력하기", role: .cancel) { }
+        } message: {
+            Text("입력한 내용을 폐기하시겠습니까?")
+        }
     }
 
     private func buildCreatedDateView(_ spot: MySpot) -> some View {
@@ -308,10 +307,6 @@ struct MySpotDetailView: View {
         }
         .padding()
         .background(Color(UIColor.secondarySystemBackground))
-        .clipShape(
-            .rect(topLeadingRadius: Constants.Sheet.cornerRadius,
-                  topTrailingRadius: Constants.Sheet.cornerRadius)
-        )
     }
 
     @ToolbarContentBuilder
