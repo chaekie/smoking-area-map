@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct SubMapView: View {
-    @EnvironmentObject var mySpotVM: MySpotDetailViewModel
+    @EnvironmentObject var mySpotVM: MySpotViewModel
     @Environment(\.presentationMode) var isPresented
     let mapMode: MapMode
 
@@ -70,7 +70,7 @@ struct SubMapView: View {
 
     private func buildFooterView() -> some View {
         HStack {
-            Text(mySpotVM.tempAddress)
+            Text(mySpotVM.tempAddressInSheet)
             Spacer()
         }
         .padding()

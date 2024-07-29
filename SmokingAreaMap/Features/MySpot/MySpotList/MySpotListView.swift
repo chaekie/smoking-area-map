@@ -9,20 +9,22 @@ import SwiftUI
 
 struct MySpotListView: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject var vm = MySpotListViewModel()
+    @StateObject var mySpotVM = MySpotViewModel()
     @State private var isPresented = false
-    @State private var isCreatingNew: Bool? = nil
+    @State private var shouldAlert = false
 
     var body: some View {
         VStack {
-            if isCreatingNew == true {
+            if mySpotVM.isCreating {
                 fullScreenProgressView()
-            } else if vm.spots.isEmpty {
+            } else if mySpotVM.spots.isEmpty {
                 emptySpotView()
             } else {
-                List(vm.spots, id: \.id) { spot in
+                List(mySpotVM.spots, id: \.id) { spot in
                     NavigationLink {
-                        DeferView(MySpotDetailView(spot: spot))
+                        DeferView(MySpotDetailView(spot: spot,
+                                                   shouldAlert: $shouldAlert))
+                        .environmentObject(mySpotVM)
                     } label: {
                         buildSpotRow(spot)
                     }
@@ -31,7 +33,7 @@ struct MySpotListView: View {
         }
         .navigationTitle("내 장소 보기")
         .onAppear() {
-            vm.getAllSpot()
+            mySpotVM.getAllSpot()
         }
         .toolbar {
             Button {
@@ -40,13 +42,10 @@ struct MySpotListView: View {
                 Label("내 장소 만들기", systemImage: "plus")
             }
         }
-        .sheet(isPresented: $isPresented, onDismiss: {
-            if isCreatingNew != nil {
-                vm.getAllSpot()
-            }
-            isCreatingNew = nil
-        }) {
-            MySpotDetailView(isCreatingNew: $isCreatingNew)
+        .sheet(isPresented: $isPresented) {
+            MySpotDetailView(isPresented: $isPresented,
+                             shouldAlert: $shouldAlert)
+            .environmentObject(mySpotVM)
         }
     }
 

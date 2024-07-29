@@ -12,7 +12,7 @@ import SwiftUI
 struct SubMapRepresentableView: UIViewRepresentable {
     @EnvironmentObject var mapVM: MapViewModel
     @EnvironmentObject var smokingAreaVM: SmokingAreaViewModel
-    @EnvironmentObject var mySpotVM: MySpotDetailViewModel
+    @EnvironmentObject var mySpotVM: MySpotViewModel
     
     @Binding var isAppear: Bool
     @Binding var shouldMove: Bool
@@ -45,12 +45,16 @@ struct SubMapRepresentableView: UIViewRepresentable {
                     if controller.isEngineActive == false { controller.activateEngine() }
 
                     if controller.isEnginePrepared && controller.isEngineActive {
-                        if mapMode == .showing && mySpotVM.isDismissed {
-                            guard let longitude = Double(mySpotVM.longitude),
-                                  let latitude = Double(mySpotVM.latitude) else { return }
-                            coordinator.moveCamera(to: GeoCoordinate(longitude: longitude, latitude: latitude),
-                                                   zoomLevel: mapMode.zoomLevel)
-                            mySpotVM.isDismissed = false
+                        if mapMode == .showing && mySpotVM.isFullSheetDismissed {
+                            if mapMode == .showing {
+                                moveToTempLocation(coordinator)
+                                mySpotVM.isFullSheetDismissed = false
+                            }
+                        }
+
+                        if mySpotVM.isEditingCanceled {
+                            moveToTempLocation(coordinator)
+                            mySpotVM.isEditingCanceled = false
                         }
                     }
                 }
@@ -63,6 +67,13 @@ struct SubMapRepresentableView: UIViewRepresentable {
 
     func makeCoordinator() -> SubMapCoordinator {
         SubMapCoordinator(parent: self)
+    }
+
+    private func moveToTempLocation(_ coordinator: SubMapCoordinator) {
+        guard let longitude = Double(mySpotVM.tempLongitude),
+              let latitude = Double(mySpotVM.tempLatitude) else { return }
+        coordinator.moveCamera(to: GeoCoordinate(longitude: longitude, latitude: latitude),
+                               zoomLevel: mapMode.zoomLevel)
     }
 
     static func dismantleUIView(_ uiView: KMViewContainer, coordinator: SubMapCoordinator) {

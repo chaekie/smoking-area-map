@@ -10,43 +10,51 @@ import SwiftUI
 
 struct MySpotDetailView: View {
     @Environment(\.dismiss) var dismiss
-    @StateObject var mySpotVM: MySpotDetailViewModel
+    @EnvironmentObject var mySpotVM: MySpotViewModel
+    @Binding var isPresented: Bool
+    @Binding var shouldAlert: Bool
 
-    @Binding var isCreatingNew: Bool?
     @FocusState private var isFocused: Bool
 
+    private var spot: MySpot?
     @State private var isNew = false
-    @State private var isEditingMode = false
+
     @State private var isSearchingMode = false
     @State private var shouldDelete = false
 
     @State private var shouldShowPhotosPicker = false
     @State private var shouldShowCamera = false
-    @State private var selectedPhoto: PhotosPickerItem?
 
     init(spot: MySpot? = nil,
-         isCreatingNew: Binding<Bool?> = .constant(nil)) {
+         isPresented: Binding<Bool> = .constant(false),
+         shouldAlert: Binding<Bool>) {
         if spot == nil { isNew = true }
-        self._mySpotVM = StateObject(wrappedValue: MySpotDetailViewModel(spot))
-        self._isCreatingNew = isCreatingNew
+        self.spot = spot
+        self._isPresented = isPresented
+        self._shouldAlert = shouldAlert
     }
 
     var body: some View {
         ZStack(alignment: .top) {
-            if !isNew { buildCreatedDateView() }
+            if let spot = mySpotVM.spot { buildCreatedDateView(spot) }
 
             List {
-                if isNew || isEditingMode {
-                    buildInputView()
+                if let spot = mySpotVM.spot {
+                    if mySpotVM.isEditingMode {
+                        buildInputView()
+                    } else {
+                        buildOutputView(spot)
+                    }
+
                 } else {
-                    buildOutputView()
+                    buildInputView()
                 }
 
-                if !isNew { buildDeleteSpotButton() }
+                if let spot = mySpotVM.spot { buildDeleteSpotButton(spot) }
             }
             .scrollIndicators(.hidden)
             .scrollContentBackground(.hidden)
-            .animation(.easeInOut, value: isEditingMode)
+            .animation(.easeInOut, value: mySpotVM.isEditingMode)
             .if(isNew) { $0.offset(y: 25) }
             .padding(.bottom, 30)
             .simultaneousGesture(TapGesture().onEnded { _ in
@@ -55,39 +63,61 @@ struct MySpotDetailView: View {
             .fullScreenCover(isPresented: $isSearchingMode) {
                 SubMapView(mapMode: MapMode.searching)
             }
+            .confirmationDialog("저장하지 않고 나가기", isPresented: $shouldAlert) {
+                Button("입력 사항 폐기", role: .destructive) {
+                    if isNew {
+                        isPresented = false
+                    } else {
+                        mySpotVM.isEditingMode = false
+                    }
+                }
+                Button("계속 입력하기", role: .cancel) { }
+            } message: {
+                Text("입력한 내용을 폐기하시겠습니까?")
+            }
 
             if isNew { buildSheetToolbar() }
         }
+        .onAppear() {
+            mySpotVM.spot = spot
+        }
+        .onDisappear() {
+                mySpotVM.spot = nil
+                mySpotVM.tempName = ""
+                mySpotVM.tempAddress = ""
+                mySpotVM.tempLongitude = ""
+                mySpotVM.tempLatitude = ""
+                mySpotVM.tempPhoto = nil
+        }
         .toolbar { buildToolbar() }
-        .environmentObject(mySpotVM)
-        .navigationBarBackButtonHidden(isEditingMode)
+        .navigationBarBackButtonHidden(mySpotVM.isEditingMode)
         .background(Color(UIColor.secondarySystemBackground))
     }
 
-    private func buildCreatedDateView() -> some View {
+    private func buildCreatedDateView(_ spot: MySpot) -> some View {
         HStack {
             Spacer()
-            Text(mySpotVM.createdDate ?? "")
+            Text(spot.dateString)
                 .foregroundStyle(.gray)
                 .font(.footnote)
             Spacer()
         }
     }
 
-    private func buildOutputView() -> some View {
+    private func buildOutputView(_ spot: MySpot) -> some View {
         Group {
             Section {
-                LabeledContent { Text(mySpotVM.name) } label: { Text("장소명") }
-                LabeledContent { Text(mySpotVM.address) } label: { Text("위치") }
-                if !mySpotVM.longitude.isEmpty && !mySpotVM.latitude.isEmpty {
+                LabeledContent { Text(spot.name) } label: { Text("장소명") }
+                LabeledContent { Text(spot.address) } label: { Text("위치") }
+                if !spot.longitude.isNaN && !spot.latitude.isNaN {
                     buildMapThumbnailView()
                 }
             }
 
-            if mySpotVM.photo != nil {
+            if let photo = spot.photo {
                 Section {
                     Text("사진").bold()
-                    buildPhotoThumbnailView()
+                    buildPhotoThumbnailView(photo)
                         .listRowInsets(EdgeInsets())
                 }
             }
@@ -98,7 +128,7 @@ struct MySpotDetailView: View {
         Group {
             Section {
                 RoundedBorderView(label: "장소명", isRequired: true) {
-                    TextField("명칭을 입력해주세요", text: $mySpotVM.name)
+                    TextField("명칭을 입력해주세요", text: $mySpotVM.tempName)
                         .focused($isFocused)
                 }
 
@@ -106,7 +136,7 @@ struct MySpotDetailView: View {
                     buildSearchAddressButton()
                 }
 
-                if !mySpotVM.longitude.isEmpty && !mySpotVM.latitude.isEmpty {
+                if !mySpotVM.tempLongitude.isEmpty && !mySpotVM.tempLatitude.isEmpty {
                     buildMapThumbnailView()
                 }
             }
@@ -122,24 +152,25 @@ struct MySpotDetailView: View {
             SubMapView(mapMode: MapMode.showing)
                 .frame(height: MapMode.showing.height)
         }
-        .disabled(!isNew && !isEditingMode)
         .listRowInsets(EdgeInsets())
         .onTapGesture {
-            isSearchingMode.toggle()
+            if isNew || mySpotVM.isEditingMode {
+                isSearchingMode = true
+            }
         }
     }
 
     @ViewBuilder
     private func buildPhotoListRowView() -> some View {
-        if mySpotVM.photo == nil {
-            RoundedBorderView(label: "사진") {
-                buildAddPhotoButton()
-            }
-        } else {
+        if let photo = mySpotVM.tempPhoto {
             Group {
                 Text("사진").bold()
-                buildPhotoThumbnailView()
+                buildPhotoThumbnailView(photo)
                     .listRowInsets(EdgeInsets())
+            }
+        } else {
+            RoundedBorderView(label: "사진") {
+                buildAddPhotoButton()
             }
         }
     }
@@ -161,27 +192,27 @@ struct MySpotDetailView: View {
             buildMenuLabel()
         }
         .photosPicker(isPresented: $shouldShowPhotosPicker,
-                      selection: $selectedPhoto,
+                      selection: $mySpotVM.selectedPhoto,
                       matching: .images)
-        .task(id: selectedPhoto) {
-            if let selectedPhoto {
+        .task(id: mySpotVM.selectedPhoto) {
+            if let selectedPhoto = mySpotVM.selectedPhoto {
                 await mySpotVM.setPhoto(from: selectedPhoto)
             }
         }
         .fullScreenCover(isPresented: $shouldShowCamera) {
-            AccessCameraView(selectedPhoto: $mySpotVM.photo)
+            AccessCameraView(selectedPhoto: $mySpotVM.tempPhoto)
                 .ignoresSafeArea()
         }
     }
 
     private func buildMenuLabel() -> some View {
         HStack {
-            if mySpotVM.photo == nil { Spacer() }
+            if mySpotVM.tempPhoto == nil { Spacer() }
             Image(systemName: "camera.fill")
-            Text("사진 \(mySpotVM.photo == nil ? "추가" : "변경")")
-            if mySpotVM.photo == nil { Spacer() }
+            Text("사진 \(mySpotVM.tempPhoto == nil ? "추가" : "변경")")
+            if mySpotVM.tempPhoto == nil { Spacer() }
         }
-        .if(mySpotVM.photo != nil) {
+        .if(mySpotVM.tempPhoto != nil) {
             $0.padding(.vertical, 10)
                 .padding(.horizontal, 13)
                 .foregroundStyle(.white)
@@ -192,14 +223,13 @@ struct MySpotDetailView: View {
     }
 
     @ViewBuilder
-    private func buildPhotoThumbnailView() -> some View {
-        if let photo = mySpotVM.photo,
-           let uiImage = UIImage(data: photo) {
+    private func buildPhotoThumbnailView(_ photo: Data) -> some View {
+        if let uiImage = UIImage(data: photo) {
             Image(uiImage: uiImage)
                 .resizable()
                 .frame(minWidth: 0, maxWidth: .infinity)
                 .frame(height: 250)
-                .if(isEditingMode || isNew) {
+                .if(mySpotVM.isEditingMode || isNew) {
                     $0.overlay(alignment: .bottom) {
                         buildAddPhotoButton()
                     }
@@ -224,39 +254,36 @@ struct MySpotDetailView: View {
                     .padding(.top, 10)
             }
             .onTapGesture {
-                selectedPhoto = nil
-                mySpotVM.photo = nil
+                mySpotVM.deletePhoto()
             }
         }
     }
 
     private func buildSearchAddressButton() -> some View {
-        let hasAddress = !mySpotVM.address.isEmpty
+        let hasAddress = !mySpotVM.tempAddress.isEmpty
 
         return Button {} label: {
             HStack {
-                Text(hasAddress ? mySpotVM.address : "여기를 눌러 주소를 검색하세요.")
+                Text(hasAddress ? mySpotVM.tempAddress : "여기를 눌러 주소를 검색하세요.")
                 Spacer()
                 Image(systemName: "chevron.right")
                     .foregroundStyle(hasAddress ? .gray : .blue)
             }
         }
         .onTapGesture {
-            isSearchingMode.toggle()
+            isSearchingMode = true
         }
     }
 
-    private func buildDeleteSpotButton() -> some View {
+    private func buildDeleteSpotButton(_ spot: MySpot) -> some View {
         Button("장소 삭제하기", role: .destructive) {
             shouldDelete = true
         }
         .alert("정말로 삭제하시겠습니까?", isPresented: $shouldDelete) {
             Button("취소", role: .cancel) { shouldDelete = false }
             Button(role: .destructive) {
-                if let spot = mySpotVM.spot {
-                    mySpotVM.deleteSpot(spot)
-                    dismiss()
-                }
+                mySpotVM.deleteSpot(spot)
+                dismiss()
             } label: { Text("삭제") }
         } message: {
             Text("삭제된 장소는 복구되지 않습니다.")
@@ -266,45 +293,54 @@ struct MySpotDetailView: View {
     private func buildSheetToolbar() -> some View {
         HStack {
             Button("취소") {
-                dismiss()
+                if mySpotVM.isEditing {
+                    shouldAlert = true
+                } else {
+                    dismiss()
+                }
             }
             Spacer()
             Button("저장") {
                 mySpotVM.createSpot()
-                isCreatingNew = true
                 dismiss()
             }
             .disabled(!mySpotVM.isSaveButtonEnabled)
         }
         .padding()
         .background(Color(UIColor.secondarySystemBackground))
+        .clipShape(
+            .rect(topLeadingRadius: Constants.Sheet.cornerRadius,
+                  topTrailingRadius: Constants.Sheet.cornerRadius)
+        )
     }
 
     @ToolbarContentBuilder
     private func buildToolbar() -> some ToolbarContent {
-        if isEditingMode {
+        if mySpotVM.isEditingMode {
             ToolbarItem(placement: .navigationBarLeading) {
-                Button("취소") { isEditingMode = false }
+                Button("취소") {
+                    if mySpotVM.isEditing {
+                        shouldAlert = true
+                    } else {
+                        mySpotVM.isEditingMode = false
+                    }
+                }
             }
         }
 
         ToolbarItem(placement: .navigationBarTrailing) {
-            if isEditingMode {
+            if mySpotVM.isEditingMode {
                 Button("저장") {
                     if let spot = mySpotVM.spot {
                         mySpotVM.updateSpot(spot)
-                        isEditingMode = false
+                        mySpotVM.isEditingMode = false
                     }
                 }
                 .disabled(!mySpotVM.isSaveButtonEnabled)
 
             } else {
-                Button("편집") { isEditingMode = true }
+                Button("편집") { mySpotVM.isEditingMode = true }
             }
         }
     }
-}
-
-#Preview {
-    MySpotDetailView()
 }

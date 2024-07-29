@@ -28,8 +28,8 @@ class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate 
     }
 
     func addViews() {
-        let longitude = Double(parent.mySpotVM.longitude) ?? Constants.Map.defaultPosition.longitude
-        let latitude = Double(parent.mySpotVM.latitude) ?? Constants.Map.defaultPosition.latitude
+        let longitude = Double(parent.mySpotVM.tempLongitude) ?? Constants.Map.defaultPosition.longitude
+        let latitude = Double(parent.mySpotVM.tempLatitude) ?? Constants.Map.defaultPosition.latitude
 
         let mapviewInfo = MapviewInfo(
             viewName: parent.mapMode.name,
@@ -81,11 +81,11 @@ class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate 
 
         let longitude = String(center.wgsCoord.longitude)
         let latitude = String(center.wgsCoord.latitude)
-        parent.mySpotVM.tempLongitude = longitude
-        parent.mySpotVM.tempLatitude = latitude
+        parent.mySpotVM.tempLongitudeInSheet = longitude
+        parent.mySpotVM.tempLatitudeInSheet = latitude
         Task { @MainActor in
             guard let address = await parent.smokingAreaVM.getAddress(by: Coordinate(longitude: longitude, latitude: latitude)) else { return }
-            parent.mySpotVM.tempAddress = address.fullAddress
+            parent.mySpotVM.tempAddressInSheet = address.fullAddress
         }
     }
 }
