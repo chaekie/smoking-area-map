@@ -90,12 +90,12 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     }
 
     private func createPois(_ manager: LabelManager, poiInfo: PoiInfo, location: GeoCoordinate) -> Poi? {
-        let newLayer = manager.getLabelLayer(layerID: poiInfo.layer.id)
+        guard let newLayer = manager.getLabelLayer(layerID: poiInfo.layer.id) else { return nil }
         let poiOption = PoiOptions(styleID: poiInfo.style.id)
         poiOption.clickable = true
         poiOption.rank = poiInfo.rank
 
-        return newLayer?.addPoi(option: poiOption, at: MapPoint(longitude: location.longitude, latitude: location.latitude))
+        return newLayer.addPoi(option: poiOption, at: MapPoint(longitude: location.longitude, latitude: location.latitude))
     }
 
     func setPois<T: SpotPoi>(_ spots: [T], poiInfo: PoiInfo) {
@@ -106,12 +106,10 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
         }
 
         spots.forEach { spot in
-            let poi = createPois(manager,
-                                 poiInfo: poiInfo,
-                                 location: GeoCoordinate(longitude: spot.longitude, latitude: spot.latitude))
-            poi?.userObject = spot as AnyObject
-            let _ = poi?.addPoiTappedEventHandler(target: self, handler: MapCoordinator.poiTappedHandler)
-            poi?.show()
+            guard let poi = createPois(manager, poiInfo: poiInfo, location: GeoCoordinate(longitude: spot.longitude, latitude: spot.latitude)) else { return }
+            poi.userObject = spot as AnyObject
+            let _ = poi.addPoiTappedEventHandler(target: self, handler: MapCoordinator.poiTappedHandler)
+            poi.show()
         }
     }
 
