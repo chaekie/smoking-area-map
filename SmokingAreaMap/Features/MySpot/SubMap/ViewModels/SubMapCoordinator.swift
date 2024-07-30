@@ -28,8 +28,17 @@ class SubMapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelegate 
     }
 
     func addViews() {
-        let longitude = Double(parent.mySpotVM.tempLongitude) ?? Constants.Map.defaultPosition.longitude
-        let latitude = Double(parent.mySpotVM.tempLatitude) ?? Constants.Map.defaultPosition.latitude
+        var longitude = Double.zero
+        var latitude = Double.zero
+        
+        switch parent.mapVM.locationServiceAuthorized {
+        case .authorizedAlways, .authorizedWhenInUse:
+            longitude = Double(parent.mySpotVM.tempLongitude) ?? Double(parent.mapVM.currentLocation.longitude)
+            latitude = Double(parent.mySpotVM.tempLatitude) ??  Double(parent.mapVM.currentLocation.latitude)
+        default:
+            longitude = Double(parent.mySpotVM.tempLongitude) ?? Constants.Map.defaultPosition.longitude
+            latitude = Double(parent.mySpotVM.tempLatitude) ?? Constants.Map.defaultPosition.latitude
+        }
 
         let mapviewInfo = MapviewInfo(
             viewName: parent.mapMode.name,

@@ -11,6 +11,13 @@ import PhotosUI
 import SwiftUI
 
 final class MySpotViewModel: ObservableObject {
+
+    enum ContentMode {
+        case creating
+        case reading
+        case updating
+    }
+
     let dataService = PersistenceController.shared
     private var cancellables = Set<AnyCancellable>()
 
@@ -40,9 +47,9 @@ final class MySpotViewModel: ObservableObject {
     }
 
     var isEditingCanceled = false
-    @Published var isEditingMode = false {
+    @Published var contentMode: ContentMode? {
         didSet {
-            if let spot, !isEditingMode {
+            if let spot, contentMode == .reading {
                 isEditingCanceled = true
                 tempAddress = spot.address
                 tempName = spot.name
@@ -97,7 +104,6 @@ final class MySpotViewModel: ObservableObject {
 
     init() {
         Publishers.CombineLatest4($tempName, $tempLongitude, $tempLatitude, $tempPhoto)
-            .debounce(for: 0.3, scheduler: DispatchQueue.main)
             .map { tempName, tempLongitude, tempLatitude, tempPhoto in
                 if let spot = self.spot {
                     return (tempName != spot.name ||
@@ -161,18 +167,31 @@ final class MySpotViewModel: ObservableObject {
         dataService.delete(spot)
     }
 
+    func setUpSpot(_ spot: MySpot?) {
+        self.spot = spot
+        if spot == nil {
+            contentMode = .creating
+        } else {
+            contentMode = .reading
+        }
+    }
+
+    func resetSpot() {
+        spot = nil
+        tempName = ""
+        tempAddress = ""
+        tempLongitude = ""
+        tempLatitude = ""
+        tempPhoto = nil
+    }
+
     func setLocation() {
         tempLongitude = tempLongitudeInSheet
         tempLatitude = tempLatitudeInSheet
         tempAddress = tempAddressInSheet
         isFullSheetDismissed = true
     }
-
-    func deletePhoto() {
-        selectedPhoto = nil
-        tempPhoto = nil
-    }
-
+    
     @MainActor
     func setPhoto(from selectedPhoto: PhotosPickerItem) async {
         do {
@@ -181,4 +200,10 @@ final class MySpotViewModel: ObservableObject {
             print(error)
         }
     }
+
+    func deletePhoto() {
+        selectedPhoto = nil
+        tempPhoto = nil
+    }
+
 }

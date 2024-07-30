@@ -41,6 +41,7 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
         )
 
         controller?.addView(mapviewInfo)
+        setUpFirstDistrict(GeoCoordinate(longitude: finalLongitude, latitude: finalLatitude))
     }
 
     func addViewSucceeded(_ viewName: String, viewInfoName: String) {
@@ -97,14 +98,14 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
         return newLayer?.addPoi(option: poiOption, at: MapPoint(longitude: location.longitude, latitude: location.latitude))
     }
 
-    func setPois<T: SpotPoi>(_ mySpots: [T], poiInfo: PoiInfo) {
+    func setPois<T: SpotPoi>(_ spots: [T], poiInfo: PoiInfo) {
         guard let view = controller?.getView(Constants.Map.mainMapName) as? KakaoMap else { return }
         let manager = view.getLabelManager()
         if let layer = manager.getLabelLayer(layerID: poiInfo.layer.id) {
             layer.clearAllItems()
         }
 
-        mySpots.forEach { spot in
+        spots.forEach { spot in
             let poi = createPois(manager,
                                  poiInfo: poiInfo,
                                  location: GeoCoordinate(longitude: spot.longitude, latitude: spot.latitude))

@@ -15,11 +15,9 @@ struct MySpotDetailView: View {
     @Binding var shouldAlert: Bool
 
     @FocusState private var isFocused: Bool
-
     private var spot: MySpot?
-    @State private var isNew = false
 
-    @State private var isSearchingMode = false
+    @State private var shouldSearchMap = false
     @State private var shouldDelete = false
 
     @State private var shouldShowPhotosPicker = false
@@ -28,7 +26,6 @@ struct MySpotDetailView: View {
     init(spot: MySpot? = nil,
          isPresented: Binding<Bool> = .constant(false),
          shouldAlert: Binding<Bool>) {
-        if spot == nil { isNew = true }
         self.spot = spot
         self._isPresented = isPresented
         self._shouldAlert = shouldAlert
@@ -39,58 +36,67 @@ struct MySpotDetailView: View {
             if let spot = mySpotVM.spot { buildCreatedDateView(spot) }
 
             List {
-                if isNew || mySpotVM.isEditingMode {
-                        buildInputView()
-                    } else {
-                        if let spot = mySpotVM.spot {
-                            buildOutputView(spot)
-                        }
+                switch mySpotVM.contentMode {
+                case .creating:
+                    buildInputView()
+                case .reading:
+                    if let spot {
+                        buildOutputView(spot)
+                        buildDeleteSpotButton(spot)
                     }
-
-                if let spot = mySpotVM.spot { 
-                    buildDeleteSpotButton(spot)
+                case .updating:
+                    if let spot {
+                        buildInputView()
+                        buildDeleteSpotButton(spot)
+                    }
+                default: EmptyView()
                 }
             }
             .scrollIndicators(.hidden)
             .scrollContentBackground(.hidden)
-            .animation(.easeInOut, value: mySpotVM.isEditingMode)
-            .if(isNew) { $0.offset(y: 25) }
+            .if(mySpotVM.contentMode == .creating) { $0.offset(y: 25) }
             .padding(.bottom, 30)
             .simultaneousGesture(TapGesture().onEnded { _ in
                 if isFocused { isFocused = false }
             })
 
-            if isNew { buildSheetToolbar() }
+            if mySpotVM.contentMode == .creating { buildSheetToolbar() }
         }
         .onAppear() {
-            mySpotVM.spot = spot
+            mySpotVM.setUpSpot(spot)
         }
         .onDisappear() {
-                mySpotVM.spot = nil
-                mySpotVM.tempName = ""
-                mySpotVM.tempAddress = ""
-                mySpotVM.tempLongitude = ""
-                mySpotVM.tempLatitude = ""
-                mySpotVM.tempPhoto = nil
+            mySpotVM.resetSpot()
         }
-        .toolbar { buildToolbar() }
-        .navigationBarBackButtonHidden(mySpotVM.isEditingMode)
-        .background(Color(UIColor.secondarySystemBackground))
-        .fullScreenCover(isPresented: $isSearchingMode) {
+        .toolbar {
+            switch mySpotVM.contentMode {
+            case .updating:
+                buildCancelToolbarItem()
+                buildUpdateToolbarItem()
+            default:
+                buildEditToolbarItem()
+            }
+        }
+        .fullScreenCover(isPresented: $shouldSearchMap) {
             SubMapView(mapMode: MapMode.searching)
         }
         .confirmationDialog("저장하지 않고 나가기", isPresented: $shouldAlert) {
             Button("입력 사항 폐기", role: .destructive) {
-                if isNew {
+                switch mySpotVM.contentMode {
+                case .creating:
                     isPresented = false
-                } else {
-                    mySpotVM.isEditingMode = false
+                case .updating:
+                    mySpotVM.contentMode = .reading
+                default: break
                 }
             }
             Button("계속 입력하기", role: .cancel) { }
         } message: {
             Text("입력한 내용을 폐기하시겠습니까?")
         }
+        .animation(.easeInOut, value: mySpotVM.contentMode)
+        .navigationBarBackButtonHidden(mySpotVM.contentMode == .updating)
+        .background(Color(UIColor.secondarySystemBackground))
     }
 
     private func buildCreatedDateView(_ spot: MySpot) -> some View {
@@ -153,8 +159,8 @@ struct MySpotDetailView: View {
         }
         .listRowInsets(EdgeInsets())
         .onTapGesture {
-            if isNew || mySpotVM.isEditingMode {
-                isSearchingMode = true
+            if mySpotVM.contentMode != .reading {
+                shouldSearchMap = true
             }
         }
     }
@@ -169,12 +175,12 @@ struct MySpotDetailView: View {
             }
         } else {
             RoundedBorderView(label: "사진") {
-                buildAddPhotoButton()
+                buildAddPhotoMenu()
             }
         }
     }
 
-    private func buildAddPhotoButton() -> some View {
+    private func buildAddPhotoMenu() -> some View {
         Menu {
             Button {
                 shouldShowPhotosPicker.toggle()
@@ -228,9 +234,9 @@ struct MySpotDetailView: View {
                 .resizable()
                 .frame(minWidth: 0, maxWidth: .infinity)
                 .frame(height: 250)
-                .if(mySpotVM.isEditingMode || isNew) {
+                .if(mySpotVM.contentMode != .reading) {
                     $0.overlay(alignment: .bottom) {
-                        buildAddPhotoButton()
+                        buildAddPhotoMenu()
                     }
                     .overlay(alignment: .topTrailing) {
                         buildDeletePhotoButton()
@@ -270,7 +276,7 @@ struct MySpotDetailView: View {
             }
         }
         .onTapGesture {
-            isSearchingMode = true
+            shouldSearchMap = true
         }
     }
 
@@ -309,32 +315,34 @@ struct MySpotDetailView: View {
         .background(Color(UIColor.secondarySystemBackground))
     }
 
-    @ToolbarContentBuilder
-    private func buildToolbar() -> some ToolbarContent {
-        if mySpotVM.isEditingMode {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button("취소") {
-                    if mySpotVM.isEditing {
-                        shouldAlert = true
-                    } else {
-                        mySpotVM.isEditingMode = false
-                    }
+    private func buildCancelToolbarItem() -> some ToolbarContent {
+        ToolbarItem(placement: .topBarLeading) {
+            Button("취소") {
+                if mySpotVM.isEditing {
+                    shouldAlert = true
+                } else {
+                    mySpotVM.contentMode = .reading
                 }
             }
         }
+    }
 
-        ToolbarItem(placement: .navigationBarTrailing) {
-            if mySpotVM.isEditingMode {
-                Button("저장") {
-                    if let spot = mySpotVM.spot {
-                        mySpotVM.updateSpot(spot)
-                        mySpotVM.isEditingMode = false
-                    }
+    private func buildUpdateToolbarItem() -> some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button("저장") {
+                if let spot = mySpotVM.spot {
+                    mySpotVM.updateSpot(spot)
+                    mySpotVM.contentMode = .reading
                 }
-                .disabled(!mySpotVM.isSaveButtonEnabled)
+            }
+            .disabled(!mySpotVM.isSaveButtonEnabled)
+        }
+    }
 
-            } else {
-                Button("편집") { mySpotVM.isEditingMode = true }
+    private func buildEditToolbarItem() -> some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            Button("편집") {
+                mySpotVM.contentMode = .updating
             }
         }
     }
