@@ -183,6 +183,7 @@ final class MySpotViewModel: ObservableObject {
         tempLongitude = ""
         tempLatitude = ""
         tempPhoto = nil
+        selectedPhoto = nil
     }
 
     func setLocation() {

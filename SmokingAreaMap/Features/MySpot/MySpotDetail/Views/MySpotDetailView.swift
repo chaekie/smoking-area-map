@@ -77,22 +77,25 @@ struct MySpotDetailView: View {
                 buildEditToolbarItem()
             }
         }
-        .fullScreenCover(isPresented: $shouldSearchMap) {
-            SubMapView(mapMode: MapMode.searching)
-        }
         .confirmationDialog("저장하지 않고 나가기", isPresented: $shouldAlert) {
-            Button("입력 사항 폐기", role: .destructive) {
-                switch mySpotVM.contentMode {
-                case .creating:
-                    isPresented = false
-                case .updating:
-                    mySpotVM.contentMode = .reading
-                default: break
-                }
-            }
-            Button("계속 입력하기", role: .cancel) { }
+            buildConfirmationDialogButtons()
         } message: {
             Text("입력한 내용을 폐기하시겠습니까?")
+        }
+        .photosPicker(isPresented: $shouldShowPhotosPicker,
+                      selection: $mySpotVM.selectedPhoto,
+                      matching: .images)
+        .task(id: mySpotVM.selectedPhoto) {
+            if let selectedPhoto = mySpotVM.selectedPhoto {
+                await mySpotVM.setPhoto(from: selectedPhoto)
+            }
+        }
+        .fullScreenCover(isPresented: $shouldShowCamera) {
+            AccessCameraView(selectedPhoto: $mySpotVM.tempPhoto)
+                .ignoresSafeArea()
+        }
+        .fullScreenCover(isPresented: $shouldSearchMap) {
+            SubMapView(mapMode: MapMode.searching)
         }
         .animation(.easeInOut, value: mySpotVM.contentMode)
         .navigationBarBackButtonHidden(mySpotVM.contentMode == .updating)
@@ -196,18 +199,6 @@ struct MySpotDetailView: View {
         } label: {
             buildMenuLabel()
         }
-        .photosPicker(isPresented: $shouldShowPhotosPicker,
-                      selection: $mySpotVM.selectedPhoto,
-                      matching: .images)
-        .task(id: mySpotVM.selectedPhoto) {
-            if let selectedPhoto = mySpotVM.selectedPhoto {
-                await mySpotVM.setPhoto(from: selectedPhoto)
-            }
-        }
-        .fullScreenCover(isPresented: $shouldShowCamera) {
-            AccessCameraView(selectedPhoto: $mySpotVM.tempPhoto)
-                .ignoresSafeArea()
-        }
     }
 
     private func buildMenuLabel() -> some View {
@@ -281,17 +272,34 @@ struct MySpotDetailView: View {
     }
 
     private func buildDeleteSpotButton(_ spot: MySpot) -> some View {
-        Button("장소 삭제하기", role: .destructive) {
-            shouldDelete = true
-        }
-        .alert("정말로 삭제하시겠습니까?", isPresented: $shouldDelete) {
-            Button("취소", role: .cancel) { shouldDelete = false }
-            Button(role: .destructive) {
-                mySpotVM.deleteSpot(spot)
-                dismiss()
-            } label: { Text("삭제") }
-        } message: {
-            Text("삭제된 장소는 복구되지 않습니다.")
+        Button("장소 삭제하기", role: .destructive) { }
+            .frame(minWidth: 0, maxWidth: .infinity)
+            .onTapGesture {
+                shouldDelete = true
+            }
+            .alert("정말로 삭제하시겠습니까?", isPresented: $shouldDelete) {
+                Button("취소", role: .cancel) { shouldDelete = false }
+                Button(role: .destructive) {
+                    mySpotVM.deleteSpot(spot)
+                    dismiss()
+                } label: { Text("삭제") }
+            } message: {
+                Text("삭제된 장소는 복구되지 않습니다.")
+            }
+    }
+
+    private func buildConfirmationDialogButtons() -> some View {
+        Group {
+            Button("입력 사항 폐기", role: .destructive) {
+                switch mySpotVM.contentMode {
+                case .creating:
+                    isPresented = false
+                case .updating:
+                    mySpotVM.contentMode = .reading
+                default: break
+                }
+            }
+            Button("계속 입력하기", role: .cancel) { }
         }
     }
 

@@ -12,8 +12,8 @@ import KakaoMapsSDK
 final class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var currentLocation = GeoCoordinate()
     @Published var cameraLocation = GeoCoordinate()
-    @Published var oldDistrictValue = DistrictInfo(name: "", code: "", uuid: "")
-    @Published var newDistrictValue = DistrictInfo(name: "", code: "", uuid: "")
+    @Published var oldDistrictValue: DistrictInfo?
+    @Published var newDistrictValue: DistrictInfo?
     @Published var locationServiceAuthorized: CLAuthorizationStatus?
     @Published var selectedSpot: SpotPoi?
 

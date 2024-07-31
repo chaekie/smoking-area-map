@@ -12,6 +12,7 @@ struct MapView: View {
     @StateObject private var smokingAreaVM = SmokingAreaViewModel()
 
     @State private var isAppear = false
+    @State private var hasDistirctInfo = false
     @State private var shouldMove = false
     @State private var isLocationAlertPresented = false
     @State private var isPoiModalPresented = false
@@ -19,6 +20,7 @@ struct MapView: View {
     var body: some View {
         NavigationStack {
             MapRepresentableView(isAppear: $isAppear,
+                                 hasDistirctInfo: hasDistirctInfo,
                                  shouldMove: $shouldMove,
                                  onPoiTapped: onPoiTapped)
             .onAppear() {
@@ -28,6 +30,11 @@ struct MapView: View {
             .onDisappear() {
                 self.isAppear = false
             }
+            .onReceive(mapVM.$oldDistrictValue) { value in
+                if value != nil {
+                    hasDistirctInfo = true
+                }
+            }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .ignoresSafeArea()
             .overlay(alignment: .bottomTrailing) {
@@ -36,14 +43,15 @@ struct MapView: View {
                                       isLocationAlertPresented: $isLocationAlertPresented)
             }
             .overlay(alignment: .top) {
-                if mapVM.oldDistrictValue.name.isEmpty {
-                    EmptyView()
-                } else if !smokingAreaVM.isInSeoul {
-                    buildOutOfSeoulText()
-                } else if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
-                    buildLoadMoreButton()
-                } else {
-                    buildSearchHereButton()
+                if let oldDistrictValue = mapVM.oldDistrictValue,
+                   let newDistrictValue = mapVM.newDistrictValue {
+                    if !smokingAreaVM.isInSeoul {
+                        buildOutOfSeoulText()
+                    } else if newDistrictValue.name == oldDistrictValue.name {
+                        buildLoadMoreButton(newDistrictValue)
+                    } else {
+                        buildSearchHereButton(newDistrictValue)
+                    }
                 }
             }
             .toolbar {
@@ -65,15 +73,15 @@ struct MapView: View {
             .padding(.vertical, 8)
     }
 
-    private func buildSearchHereButton() -> some View {
+    private func buildSearchHereButton(_ district: DistrictInfo) -> some View {
         Button {
             Task {
                 smokingAreaVM.page = 1
-                await smokingAreaVM.fetchSmokingArea(district: mapVM.newDistrictValue)
-                mapVM.oldDistrictValue = mapVM.newDistrictValue
+                await smokingAreaVM.fetchSmokingArea(district: district)
+                mapVM.oldDistrictValue = district
             }
         } label: {
-            Text("\(mapVM.newDistrictValue.name) 검색")
+            Text("\(district.name) 검색")
                 .font(.callout)
                 .padding(.vertical, 8)
                 .padding(.horizontal, 14)
@@ -86,13 +94,13 @@ struct MapView: View {
         }
     }
 
-    private func buildLoadMoreButton() -> some View {
+    private func buildLoadMoreButton(_ district: DistrictInfo) -> some View {
         let totalPage = Int(ceil(Double(smokingAreaVM.totalCount)/Double(smokingAreaVM.size)))
 
         return Button {
             Task {
                 smokingAreaVM.page += 1
-                await smokingAreaVM.fetchSmokingArea(district: mapVM.newDistrictValue)
+                await smokingAreaVM.fetchSmokingArea(district: district)
             }
         } label: {
             Text("결과 더보기 \(smokingAreaVM.page)/ \(totalPage)")

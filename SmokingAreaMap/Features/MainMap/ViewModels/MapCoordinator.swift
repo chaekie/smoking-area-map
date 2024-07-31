@@ -44,6 +44,19 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
         setUpFirstDistrict(GeoCoordinate(longitude: finalLongitude, latitude: finalLatitude))
     }
 
+    func setUpFirstDistrict(_ coord: GeoCoordinate) {
+        Task {
+            guard let address = await parent.smokingAreaVM.getAddress(by: Coordinate(longitude: String(coord.longitude), latitude: String(coord.latitude))),
+                  let district = await parent.smokingAreaVM.getDistrictInfo(by: address.gu) else { return }
+
+            await parent.smokingAreaVM.fetchSmokingArea(district: district)
+            await MainActor.run {
+                parent.mapVM.oldDistrictValue = district
+                parent.mapVM.newDistrictValue = district
+            }
+        }
+    }
+
     func addViewSucceeded(_ viewName: String, viewInfoName: String) {
         guard let view = controller?.getView(viewName) as? KakaoMap else { return }
         let labelManager = view.getLabelManager()
@@ -85,31 +98,37 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     }
 
     private func setCurrentPosiotionPoi(_ manager: LabelManager) {
-        parent.mapVM.currentPositionPoi = createPois(manager, poiInfo: Constants.Map.currentPoiInfo, location: parent.mapVM.currentLocation)
+        guard let layer = manager.getLabelLayer(layerID: Constants.Map.currentPoiInfo.layer.id) else { return }
+        let poiOption = PoiOptions(styleID: Constants.Map.currentPoiInfo.style.id)
+        poiOption.rank = Constants.Map.currentPoiInfo.rank
+
+        parent.mapVM.currentPositionPoi = layer.addPoi(option: poiOption,
+                                                       at: MapPoint(longitude: parent.mapVM.currentLocation.longitude,
+                                                                    latitude: parent.mapVM.currentLocation.latitude))
         parent.mapVM.currentPositionPoi?.show()
-    }
 
-    private func createPois(_ manager: LabelManager, poiInfo: PoiInfo, location: GeoCoordinate) -> Poi? {
-        guard let newLayer = manager.getLabelLayer(layerID: poiInfo.layer.id) else { return nil }
-        let poiOption = PoiOptions(styleID: poiInfo.style.id)
-        poiOption.clickable = true
-        poiOption.rank = poiInfo.rank
-
-        return newLayer.addPoi(option: poiOption, at: MapPoint(longitude: location.longitude, latitude: location.latitude))
     }
 
     func setPois<T: SpotPoi>(_ spots: [T], poiInfo: PoiInfo) {
         guard let view = controller?.getView(Constants.Map.mainMapName) as? KakaoMap else { return }
         let manager = view.getLabelManager()
-        if let layer = manager.getLabelLayer(layerID: poiInfo.layer.id) {
-            layer.clearAllItems()
-        }
+        guard let layer = manager.getLabelLayer(layerID: poiInfo.layer.id) else { return }
+        layer.clearAllItems()
 
-        spots.forEach { spot in
-            guard let poi = createPois(manager, poiInfo: poiInfo, location: GeoCoordinate(longitude: spot.longitude, latitude: spot.latitude)) else { return }
-            poi.userObject = spot as AnyObject
-            let _ = poi.addPoiTappedEventHandler(target: self, handler: MapCoordinator.poiTappedHandler)
-            poi.show()
+        let poiOption = PoiOptions(styleID: poiInfo.style.id)
+        poiOption.clickable = true
+        poiOption.rank = poiInfo.rank
+
+        let locations = spots.map { MapPoint(longitude: $0.longitude, latitude: $0.latitude) }
+
+        let _ = layer.addPois(option: poiOption, at: locations) { [weak layer](pois: [Poi]?) -> Void in
+            if let pois {
+                for (poi, spot) in zip(pois, spots) {
+                    poi.userObject = spot as AnyObject
+                    let _ = poi.addPoiTappedEventHandler(target: self, handler: MapCoordinator.poiTappedHandler)
+                }
+            }
+            layer?.showAllPois()
         }
     }
 
@@ -182,20 +201,6 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
         )
     }
 
-    private func setUpFirstDistrict(_ coord: GeoCoordinate) {
-        Task {
-            guard let address = await parent.smokingAreaVM.getAddress(by: Coordinate(longitude: String(coord.longitude), latitude: String(coord.latitude))),
-                  let district = await parent.smokingAreaVM.getDistrictInfo(by: address.gu) else { return }
-
-            await parent.smokingAreaVM.fetchSmokingArea(district: district)
-            await setPois(parent.smokingAreaVM.smokingAreas, poiInfo: Constants.Map.spotPoiInfo)
-            await MainActor.run {
-                parent.mapVM.oldDistrictValue = district
-                parent.mapVM.newDistrictValue = district
-            }
-        }
-    }
-
     func onCameraWillMove(_ param: CameraActionEventParam) {
         switch param.by {
         case .doubleTapZoomIn: print("move by: doubleTapZoomIn")
@@ -236,18 +241,19 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
 
     private func updateFocusedPolygon(_ view: KakaoMap, district: DistrictInfo?) {
         let manager = view.getShapeManager()
-        let layer = manager.getShapeLayer(layerID: Constants.Map.polygonLayerID)
-
-        guard let district else {
-            layer?.hideAllPolygonShapes()
+        guard let layer = manager.getShapeLayer(layerID: Constants.Map.polygonLayerID) else { return }
+        guard let district,
+              let oldDistrictValue = parent.mapVM.oldDistrictValue,
+              let newDistrictValue = parent.mapVM.newDistrictValue else {
+            layer.hideAllPolygonShapes()
             return
         }
 
-        if parent.mapVM.oldDistrictValue.name == "" || parent.mapVM.oldDistrictValue.name == district.name {
-            layer?.hideAllPolygonShapes()
-        } else if parent.mapVM.oldDistrictValue.name != district.name {
-            let oldShape = layer?.getMapPolygonShape(shapeID: parent.mapVM.newDistrictValue.name)
-            let newShape = layer?.getMapPolygonShape(shapeID: district.name)
+        if oldDistrictValue.name == district.name {
+            layer.hideAllPolygonShapes()
+        } else {
+            let oldShape = layer.getMapPolygonShape(shapeID: newDistrictValue.name)
+            let newShape = layer.getMapPolygonShape(shapeID: district.name)
             oldShape?.hide()
             newShape?.show()
         }

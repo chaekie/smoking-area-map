@@ -14,6 +14,7 @@ struct MapRepresentableView: UIViewRepresentable {
     @EnvironmentObject var smokingAreaVM: SmokingAreaViewModel
 
     @Binding var isAppear: Bool
+    var hasDistirctInfo: Bool
     @Binding var shouldMove: Bool
 
     var onPoiTapped: () -> Void
@@ -48,7 +49,13 @@ struct MapRepresentableView: UIViewRepresentable {
                         updateSmokingAreasPoi(coordinator)
                         updateMySpotsPoi(coordinator)
 
-                        if mapVM.newDistrictValue.name == mapVM.oldDistrictValue.name {
+                        guard let oldDistrictValue = mapVM.oldDistrictValue,
+                              let newDistrictValue = mapVM.newDistrictValue else {
+                            coordinator.setPois(smokingAreaVM.smokingAreas, poiInfo: Constants.Map.spotPoiInfo)
+                            return
+                        }
+
+                        if newDistrictValue.name == oldDistrictValue.name {
                             coordinator.hideAllPolygons()
                         }
                     }
