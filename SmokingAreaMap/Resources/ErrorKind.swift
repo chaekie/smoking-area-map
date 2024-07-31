@@ -40,6 +40,11 @@ enum ErrorKind: String {
     case serverError
     case unknownError
 
+    case CoreDataSettingError
+    case CoreDataSaveError
+    case CoreDateFetchError
+
+
     var title: String {
         switch self {
         case .networkUnavailable:
@@ -56,6 +61,8 @@ enum ErrorKind: String {
             return "서버 문제"
         case .unknownError:
             return "알 수 없는 오류"
+        case .CoreDataSettingError, .CoreDataSaveError, .CoreDateFetchError:
+            return "CoreData 오류"
         }
     }
 
@@ -81,6 +88,12 @@ enum ErrorKind: String {
             return "서버에 문제가 발생하였습니다."
         case .unknownError:
             return "알 수 없는 오류가 발생했습니다."
+        case .CoreDataSettingError:
+            return "Persistence Stores 로드할 수 없습니다"
+        case .CoreDataSaveError:
+            return "저장할 수 없습니다"
+        case .CoreDateFetchError:
+            return "패치할 수 없습니다"
         }
     }
 }

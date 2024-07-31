@@ -7,16 +7,30 @@
 
 import SwiftUI
 
-final
-class SmokingAreaViewModel: ObservableObject {
+final class SmokingAreaViewModel: ObservableObject {
     private let openDataBaseURL = "https://api.odcloud.kr/api/"
     private let kakaoLocalBaseURL = "https://dapi.kakao.com/v2/local/"
 
-    @Published var smokingAreas = [SmokingArea]()
+    let dataService = PersistenceController.shared
+
+    @Published var isSmokingAreasUpdated = false
+    @Published var smokingAreas: [SmokingArea] = [] {
+        didSet { isSmokingAreasUpdated = true }
+    }
+
+    @Published var isMySpotUpdated = false
+    @Published var mySpots: [MySpot] = [] {
+        didSet { isMySpotUpdated = true }
+    }
+
     @Published var totalCount = 0
     @Published var page = 1
     @Published var size = 20
     @Published var isInSeoul = true
+
+    func getAllSpot() {
+        mySpots = dataService.read()
+    }
 
     func fetchSmokingArea(district: DistrictInfo) async {
         if district.code.isEmpty {
@@ -205,31 +219,16 @@ class SmokingAreaViewModel: ObservableObject {
         return data
     }
 
-    func getDistrict(by coordinates: Coordinate) async -> DistrictInfo? {
-        let urlString = "\(kakaoLocalBaseURL)geo/coord2regioncode.json?x=\(coordinates.longitude)&y=\(coordinates.latitude)"
+    func getAddress(by coordinates: Coordinate) async -> Address? {
+        let urlString = "\(kakaoLocalBaseURL)geo/coord2address.json?x=\(coordinates.longitude)&y=\(coordinates.latitude)"
 
         do {
             let data = try await getKakaoApiData(urlString: urlString)
-            let decodedData = try JSONDecoder().decode(LocalRegionDataResult.self, from: data)
+            let decodedData = try JSONDecoder().decode(LocalAddressDataResult.self, from: data)
             let documents = decodedData.documents
             if documents.isEmpty { return nil }
 
-            guard let region = District(rawValue: documents[0].gu) else {
-                DispatchQueue.main.async {
-                    withAnimation(.easeIn(duration: 0.2)) {
-                        self.isInSeoul = false
-                    }
-                }
-                return nil
-            }
-
-            DispatchQueue.main.async {
-                withAnimation(.easeIn(duration: 0.2)) {
-                    self.isInSeoul = true
-                }
-            }
-
-            return DistrictInfo(name: region.name, code: region.code, uuid: region.uuid)
+            return documents[0].address
 
         } catch {
             dump(handleRequestError(error))
@@ -237,4 +236,22 @@ class SmokingAreaViewModel: ObservableObject {
         return nil
     }
 
+    func getDistrictInfo(by gu: String) -> DistrictInfo? {
+        guard let region = District(rawValue: gu) else {
+            DispatchQueue.main.async {
+                withAnimation(.easeIn(duration: 0.2)) {
+                    self.isInSeoul = false
+                }
+            }
+            return nil
+        }
+
+        DispatchQueue.main.async {
+            withAnimation(.easeIn(duration: 0.2)) {
+                self.isInSeoul = true
+            }
+        }
+
+        return DistrictInfo(name: region.name, code: region.code, uuid: region.uuid)
+    }
 }

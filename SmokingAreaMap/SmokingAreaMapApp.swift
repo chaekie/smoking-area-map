@@ -17,7 +17,7 @@ struct SmokingAreaMapApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MapView()
         }
     }
 }
