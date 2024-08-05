@@ -19,45 +19,49 @@ struct MapView: View {
 
     var body: some View {
         NavigationStack {
-            MapRepresentableView(isAppear: $isAppear,
-                                 hasDistirctInfo: hasDistirctInfo,
-                                 shouldMove: $shouldMove,
-                                 onPoiTapped: onPoiTapped)
-            .onAppear() {
-                self.isAppear = true
-                smokingAreaVM.getAllSpot()
-            }
-            .onDisappear() {
-                self.isAppear = false
-            }
-            .onReceive(mapVM.$oldDistrictValue) { value in
-                if value != nil {
-                    hasDistirctInfo = true
+            ZStack {
+                MapRepresentableView(isAppear: $isAppear,
+                                     hasDistirctInfo: hasDistirctInfo,
+                                     shouldMove: $shouldMove,
+                                     onPoiTapped: onPoiTapped)
+                .onAppear() {
+                    self.isAppear = true
+                    smokingAreaVM.getAllSpot()
                 }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .ignoresSafeArea()
-            .overlay(alignment: .bottomTrailing) {
-                buildPoiSheetView()
-                CurrentLocationButton(shouldMove: $shouldMove,
-                                      isLocationAlertPresented: $isLocationAlertPresented)
-            }
-            .overlay(alignment: .top) {
-                if let oldDistrictValue = mapVM.oldDistrictValue,
-                   let newDistrictValue = mapVM.newDistrictValue {
-                    if !smokingAreaVM.isInSeoul {
-                        buildOutOfSeoulText()
-                    } else if newDistrictValue.name == oldDistrictValue.name {
-                        buildLoadMoreButton(newDistrictValue)
-                    } else {
-                        buildSearchHereButton(newDistrictValue)
+                .onDisappear() {
+                    self.isAppear = false
+                }
+                .onReceive(mapVM.$oldDistrictValue) { value in
+                    if value != nil {
+                        hasDistirctInfo = true
                     }
                 }
-            }
-            .toolbar {
-                NavigationLink(destination: MySpotListView()) {
-                    Label("내 장소 보기", systemImage: "list.bullet")
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+                .overlay(alignment: .bottomTrailing) {
+                    //    buildPoiSheetView()
+                    CurrentLocationButton(shouldMove: $shouldMove,
+                                          isLocationAlertPresented: $isLocationAlertPresented)
                 }
+                .overlay(alignment: .top) {
+                    if let oldDistrictValue = mapVM.oldDistrictValue,
+                       let newDistrictValue = mapVM.newDistrictValue {
+                        if !smokingAreaVM.isInSeoul {
+                            buildOutOfSeoulText()
+                        } else if newDistrictValue.name == oldDistrictValue.name {
+                            buildLoadMoreButton(newDistrictValue)
+                        } else {
+                            buildSearchHereButton(newDistrictValue)
+                        }
+                    }
+                }
+                .toolbar {
+                    NavigationLink(destination: MySpotListView()) {
+                        Label("내 장소 보기", systemImage: "list.bullet")
+                    }
+                }
+
+                CustomSheetView(isPresented: $isPoiModalPresented)
             }
         }
         .environmentObject(mapVM)
