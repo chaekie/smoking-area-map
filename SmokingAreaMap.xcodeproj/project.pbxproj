@@ -105,6 +105,7 @@
 		51263D262C16D2BD0009509F = {
 			isa = PBXGroup;
 			children = (
+				51263D402C16D2D10009509F /* .gitignore */,
 				51263D312C16D2BD0009509F /* SmokingAreaMap */,
 				51263D302C16D2BD0009509F /* Products */,
 			);
@@ -129,7 +130,6 @@
 				51263D322C16D2BD0009509F /* SmokingAreaMapApp.swift */,
 				51263D432C16E0C40009509F /* Info.plist */,
 				51263D422C16DD370009509F /* Config.xcconfig */,
-				51263D402C16D2D10009509F /* .gitignore */,
 			);
 			path = SmokingAreaMap;
 			sourceTree = "<group>";
