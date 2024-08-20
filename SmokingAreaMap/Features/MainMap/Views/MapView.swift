@@ -15,11 +15,11 @@ struct MapView: View {
     @State private var hasDistirctInfo = false
     @State private var shouldMove = false
     @State private var isLocationAlertPresented = false
-    @State private var isPoiModalPresented = false
+    @State private var isPoiModalPresented = true
 
     var body: some View {
-        NavigationStack {
-            ZStack {
+        ZStack {
+            NavigationStack {
                 MapRepresentableView(isAppear: $isAppear,
                                      hasDistirctInfo: hasDistirctInfo,
                                      shouldMove: $shouldMove,
@@ -60,9 +60,8 @@ struct MapView: View {
                         Label("내 장소 보기", systemImage: "list.bullet")
                     }
                 }
-
-                CustomSheetView(isPresented: $isPoiModalPresented)
             }
+            CustomSheetView(isPresented: $isPoiModalPresented)
         }
         .environmentObject(mapVM)
         .environmentObject(smokingAreaVM)

@@ -27,6 +27,12 @@ struct Constants {
                                             rank: 10)
     }
 
+    struct BottomSheet {
+        static let aniDuration = 0.1
+        static let initPosition = CGFloat(2000)
+        static let standardVelocity = CGFloat(1000)
+    }
+
 }
 
 
