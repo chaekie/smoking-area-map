@@ -32,6 +32,10 @@
 		5177DEFD2C292BB9003D8701 /* SmokingAreaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */; };
 		5177DEFF2C292E77003D8701 /* SmokingArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFE2C292E77003D8701 /* SmokingArea.swift */; };
 		5177DF052C2A7B0F003D8701 /* ErrorKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DF042C2A7B0F003D8701 /* ErrorKind.swift */; };
+		518886C02C746B0900CD405E /* ScrollViewControllerRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518886BF2C746B0900CD405E /* ScrollViewControllerRepresentable.swift */; };
+		518886C32C76F4A600CD405E /* CustomSheetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518886C22C76F4A600CD405E /* CustomSheetViewModel.swift */; };
+		518886C52C76F4B000CD405E /* CustomSheetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518886C42C76F4B000CD405E /* CustomSheetModel.swift */; };
+		518886C72C76F4FB00CD405E /* ScrollContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518886C62C76F4FB00CD405E /* ScrollContentView.swift */; };
 		51889BF72C4E42E8009996F2 /* MapMode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51889BF62C4E42E8009996F2 /* MapMode.swift */; };
 		51889BFA2C4E4514009996F2 /* SubMapCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51889BF92C4E4514009996F2 /* SubMapCoordinator.swift */; };
 		51889BFC2C4F9D55009996F2 /* CurrentLocationButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51889BFB2C4F9D55009996F2 /* CurrentLocationButton.swift */; };
@@ -75,6 +79,10 @@
 		5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingAreaViewModel.swift; sourceTree = "<group>"; };
 		5177DEFE2C292E77003D8701 /* SmokingArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingArea.swift; sourceTree = "<group>"; };
 		5177DF042C2A7B0F003D8701 /* ErrorKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorKind.swift; sourceTree = "<group>"; };
+		518886BF2C746B0900CD405E /* ScrollViewControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollViewControllerRepresentable.swift; sourceTree = "<group>"; };
+		518886C22C76F4A600CD405E /* CustomSheetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSheetViewModel.swift; sourceTree = "<group>"; };
+		518886C42C76F4B000CD405E /* CustomSheetModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSheetModel.swift; sourceTree = "<group>"; };
+		518886C62C76F4FB00CD405E /* ScrollContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollContentView.swift; sourceTree = "<group>"; };
 		51889BF62C4E42E8009996F2 /* MapMode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapMode.swift; sourceTree = "<group>"; };
 		51889BF92C4E4514009996F2 /* SubMapCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubMapCoordinator.swift; sourceTree = "<group>"; };
 		51889BFB2C4F9D55009996F2 /* CurrentLocationButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrentLocationButton.swift; sourceTree = "<group>"; };
@@ -226,7 +234,6 @@
 				51263D342C16D2BD0009509F /* MapView.swift */,
 				51263D4E2C1805880009509F /* MapRepresentableView.swift */,
 				5120838B2C2E983500F12295 /* BottomSheetView.swift */,
-				517204B82C607C99005A1370 /* CustomSheetView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -286,6 +293,18 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		518886C12C76F48A00CD405E /* CustomSheet */ = {
+			isa = PBXGroup;
+			children = (
+				518886BF2C746B0900CD405E /* ScrollViewControllerRepresentable.swift */,
+				518886C42C76F4B000CD405E /* CustomSheetModel.swift */,
+				517204B82C607C99005A1370 /* CustomSheetView.swift */,
+				518886C62C76F4FB00CD405E /* ScrollContentView.swift */,
+				518886C22C76F4A600CD405E /* CustomSheetViewModel.swift */,
+			);
+			path = CustomSheet;
+			sourceTree = "<group>";
+		};
 		51D2DC112C4A48440019D4B1 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -300,6 +319,7 @@
 		51D2DC122C4A484B0019D4B1 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				518886C12C76F48A00CD405E /* CustomSheet */,
 				51D2DBDA2C4777C00019D4B1 /* DeferView.swift */,
 				51D2DC132C4A486E0019D4B1 /* CenterContainerView.swift */,
 				51889BFB2C4F9D55009996F2 /* CurrentLocationButton.swift */,
@@ -394,6 +414,7 @@
 				51889BFC2C4F9D55009996F2 /* CurrentLocationButton.swift in Sources */,
 				51D2DC102C4A43720019D4B1 /* RoundedBorderView.swift in Sources */,
 				514E2EFA2C522A6800C86AB9 /* Constants.swift in Sources */,
+				518886C72C76F4FB00CD405E /* ScrollContentView.swift in Sources */,
 				51D2DC142C4A486E0019D4B1 /* CenterContainerView.swift in Sources */,
 				512083882C2D10CB00F12295 /* MapCoordinator.swift in Sources */,
 				511253DA2C4DF1DC003C4E25 /* SubMapView.swift in Sources */,
@@ -402,6 +423,7 @@
 				51263D4F2C1805880009509F /* MapRepresentableView.swift in Sources */,
 				513F45BB2C3E39A400743318 /* +Bundle.swift in Sources */,
 				5177DF052C2A7B0F003D8701 /* ErrorKind.swift in Sources */,
+				518886C32C76F4A600CD405E /* CustomSheetViewModel.swift in Sources */,
 				51D2DBD72C46ADC60019D4B1 /* MySpotDetailView.swift in Sources */,
 				5177DEFF2C292E77003D8701 /* SmokingArea.swift in Sources */,
 				51D2DBCE2C4501C30019D4B1 /* PersistenceController.swift in Sources */,
@@ -413,6 +435,8 @@
 				51D2DBD02C450A920019D4B1 /* MySpotListView.swift in Sources */,
 				512083922C37824C00F12295 /* District.swift in Sources */,
 				513F45B72C3BDC7A00743318 /* +Sequence.swift in Sources */,
+				518886C02C746B0900CD405E /* ScrollViewControllerRepresentable.swift in Sources */,
+				518886C52C76F4B000CD405E /* CustomSheetModel.swift in Sources */,
 				514E2EE32C50A41100C86AB9 /* +View.swift in Sources */,
 				51263D332C16D2BD0009509F /* SmokingAreaMapApp.swift in Sources */,
 				517204B92C607C99005A1370 /* CustomSheetView.swift in Sources */,
