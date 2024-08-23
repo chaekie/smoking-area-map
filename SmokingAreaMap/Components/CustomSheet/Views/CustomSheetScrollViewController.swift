@@ -1,33 +1,21 @@
 //
-//  ScrollViewControllerRepresentable.swift
+//  CustomSheetScrollViewController.swift
 //  SmokingAreaMap
 //
 //  Created by chaekie on 8/20/24.
 //
 
-import UIKit
+import Combine
 import SwiftUI
 
-struct ScrollViewControllerRepresentable: UIViewControllerRepresentable {
-    @EnvironmentObject var vm: CustomSheetViewModel
-    @Binding var isPresented: Bool
-
-    func makeUIViewController(context: Context) -> ScrollViewController {
-        let scrollVC = ScrollViewController()
-        scrollVC.isPresented = $isPresented
-        scrollVC.vm = vm
-        return scrollVC
-    }
-
-    func updateUIViewController(_ uiViewController: ScrollViewController, context: Context) {
-        uiViewController.scrollView.isScrollEnabled = vm.isScrollEnabled
-    }
-}
-
-final class ScrollViewController: UIViewController, UIScrollViewDelegate {
+final class CustomSheetScrollViewController: UIViewController {
     var isPresented: Binding<Bool>?
-    var vm: CustomSheetViewModel?
+    weak var vm: CustomSheetViewModel?
     private var startPosition = CGFloat.zero
+
+    private var cancellables = Set<AnyCancellable>()
+    private let scrollSubject = PassthroughSubject<CGFloat, Never>()
+    private let velocitySubject = PassthroughSubject<CGPoint, Never>()
 
     let scrollView: UIScrollView = {
         let view = UIScrollView()
@@ -74,25 +62,30 @@ final class ScrollViewController: UIViewController, UIScrollViewDelegate {
             hostingController.view.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
         ])
     }
+    
+    private func setupCombineBindings() {
+        scrollSubject
+            .sink { [weak self] newPosition in
+                guard let self, let vm = self.vm else { return }
+                vm.isScrollingFromTheTop = startPosition <= 0.0 && newPosition < startPosition
+            }
+            .store(in: &cancellables)
 
-    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        startPosition = scrollView.contentOffset.y
+        velocitySubject
+            .sink { [weak self] velocity in
+                guard let self else { return }
+                self.handleScrollEnd(velocity: velocity)
+            }
+            .store(in: &cancellables)
     }
 
-    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let newPosition = scrollView.contentOffset.y
-        vm?.isScrollingFromTheTop = isScrollDownStartFromTheTop(newPosition)
-    }
-
-    func scrollViewWillEndDragging(_ scrollView: UIScrollView, 
-                                   withVelocity velocity: CGPoint,
-                                   targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+    private func handleScrollEnd(velocity: CGPoint) {
         guard let vm else { return }
         let newPosition = scrollView.contentOffset.y
 
-        if isScrollDownStartFromTheTop(newPosition) {
-            let isFast = velocity.y < -1
-            let isCollapseEnough = newPosition < -100
+        if vm.isScrollingFromTheTop {
+            let isFast = velocity.y < -Constants.BottomSheet.scrollVelocityThreshold
+            let isCollapseEnough = newPosition < -Constants.BottomSheet.distanceThreshold
 
             if isFast || isCollapseEnough {
                 vm.showSmallSheet()
@@ -103,13 +96,27 @@ final class ScrollViewController: UIViewController, UIScrollViewDelegate {
         }
     }
 
-    private func isScrollDownStartFromTheTop(_ newPosition: CGFloat) -> Bool {
-        return startPosition <= 0.0 && newPosition < startPosition
-    }
-
     func collapseSheet() {
         guard let vm else { return }
         vm.showSmallSheet()
         scrollView.contentOffset.y = 0
+    }
+}
+
+extension CustomSheetScrollViewController: UIScrollViewDelegate {
+
+    func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
+        startPosition = scrollView.contentOffset.y
+    }
+
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        let newPosition = scrollView.contentOffset.y
+        scrollSubject.send(newPosition)
+    }
+
+    func scrollViewWillEndDragging(_ scrollView: UIScrollView,
+                                   withVelocity velocity: CGPoint,
+                                   targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        velocitySubject.send(velocity)
     }
 }

@@ -30,7 +30,10 @@ struct Constants {
     struct BottomSheet {
         static let aniDuration = 0.1
         static let initPosition = CGFloat(2000)
-        static let standardVelocity = CGFloat(1000)
+        static let dragVelocityThreshold = CGFloat(1000)
+        static let scrollVelocityThreshold = CGFloat(1)
+        static let distanceThreshold = CGFloat(100)
+        static let smallSheetHeightRatio = CGFloat(4/5)
     }
 
 }

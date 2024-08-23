@@ -32,7 +32,7 @@
 		5177DEFD2C292BB9003D8701 /* SmokingAreaViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */; };
 		5177DEFF2C292E77003D8701 /* SmokingArea.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DEFE2C292E77003D8701 /* SmokingArea.swift */; };
 		5177DF052C2A7B0F003D8701 /* ErrorKind.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5177DF042C2A7B0F003D8701 /* ErrorKind.swift */; };
-		518886C02C746B0900CD405E /* ScrollViewControllerRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518886BF2C746B0900CD405E /* ScrollViewControllerRepresentable.swift */; };
+		518886C02C746B0900CD405E /* CustomSheetScrollViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518886BF2C746B0900CD405E /* CustomSheetScrollViewController.swift */; };
 		518886C32C76F4A600CD405E /* CustomSheetViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518886C22C76F4A600CD405E /* CustomSheetViewModel.swift */; };
 		518886C52C76F4B000CD405E /* CustomSheetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518886C42C76F4B000CD405E /* CustomSheetModel.swift */; };
 		518886C72C76F4FB00CD405E /* ScrollContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 518886C62C76F4FB00CD405E /* ScrollContentView.swift */; };
@@ -79,7 +79,7 @@
 		5177DEFC2C292BB9003D8701 /* SmokingAreaViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingAreaViewModel.swift; sourceTree = "<group>"; };
 		5177DEFE2C292E77003D8701 /* SmokingArea.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SmokingArea.swift; sourceTree = "<group>"; };
 		5177DF042C2A7B0F003D8701 /* ErrorKind.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ErrorKind.swift; sourceTree = "<group>"; };
-		518886BF2C746B0900CD405E /* ScrollViewControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollViewControllerRepresentable.swift; sourceTree = "<group>"; };
+		518886BF2C746B0900CD405E /* CustomSheetScrollViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSheetScrollViewController.swift; sourceTree = "<group>"; };
 		518886C22C76F4A600CD405E /* CustomSheetViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSheetViewModel.swift; sourceTree = "<group>"; };
 		518886C42C76F4B000CD405E /* CustomSheetModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSheetModel.swift; sourceTree = "<group>"; };
 		518886C62C76F4FB00CD405E /* ScrollContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrollContentView.swift; sourceTree = "<group>"; };
@@ -296,13 +296,37 @@
 		518886C12C76F48A00CD405E /* CustomSheet */ = {
 			isa = PBXGroup;
 			children = (
-				518886BF2C746B0900CD405E /* ScrollViewControllerRepresentable.swift */,
-				518886C42C76F4B000CD405E /* CustomSheetModel.swift */,
-				517204B82C607C99005A1370 /* CustomSheetView.swift */,
-				518886C62C76F4FB00CD405E /* ScrollContentView.swift */,
-				518886C22C76F4A600CD405E /* CustomSheetViewModel.swift */,
+				518886C92C772ACE00CD405E /* Models */,
+				518886C82C77293B00CD405E /* Views */,
+				518886CA2C772AE100CD405E /* ViewModels */,
 			);
 			path = CustomSheet;
+			sourceTree = "<group>";
+		};
+		518886C82C77293B00CD405E /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				517204B82C607C99005A1370 /* CustomSheetView.swift */,
+				518886BF2C746B0900CD405E /* CustomSheetScrollViewController.swift */,
+				518886C62C76F4FB00CD405E /* ScrollContentView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		518886C92C772ACE00CD405E /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				518886C42C76F4B000CD405E /* CustomSheetModel.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		518886CA2C772AE100CD405E /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				518886C22C76F4A600CD405E /* CustomSheetViewModel.swift */,
+			);
+			path = ViewModels;
 			sourceTree = "<group>";
 		};
 		51D2DC112C4A48440019D4B1 /* Resources */ = {
@@ -435,7 +459,7 @@
 				51D2DBD02C450A920019D4B1 /* MySpotListView.swift in Sources */,
 				512083922C37824C00F12295 /* District.swift in Sources */,
 				513F45B72C3BDC7A00743318 /* +Sequence.swift in Sources */,
-				518886C02C746B0900CD405E /* ScrollViewControllerRepresentable.swift in Sources */,
+				518886C02C746B0900CD405E /* CustomSheetScrollViewController.swift in Sources */,
 				518886C52C76F4B000CD405E /* CustomSheetModel.swift in Sources */,
 				514E2EE32C50A41100C86AB9 /* +View.swift in Sources */,
 				51263D332C16D2BD0009509F /* SmokingAreaMapApp.swift in Sources */,

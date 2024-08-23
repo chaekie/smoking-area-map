@@ -17,9 +17,8 @@ struct CustomSheetView: View {
                 if !vm.isScrollingFromTheTop && vm.dragOffset == 0.0 {
                     Color.white
                 }
-                ScrollViewControllerRepresentable(isPresented: $isPresented)
+                CustomSheetViewControllerRepresentable(vm: vm, isPresented: $isPresented)
             }
-            .environmentObject(vm)
             .offset(y: vm.dragOffset)
             .gesture(drag)
             .onAppear() {
@@ -41,15 +40,26 @@ struct CustomSheetView: View {
     private var drag: some Gesture {
         DragGesture()
             .onChanged { gesture in
-                if !vm.isScrollEnabled {
-                    vm.dragOffset = vm.lastOffset + gesture.translation.height
-                }
-                vm.setSwipeDirection(by: gesture.velocity.height)
-                vm.constrainSheetHeight()
+                vm.onDragGestureChanged(gesture)
             }
             .onEnded { gesture in
-                let velocity = gesture.velocity.height
-                vm.handleSwipe(velocity: velocity)
+                vm.onDragGestureChanged(gesture)
             }
+    }
+}
+
+struct CustomSheetViewControllerRepresentable: UIViewControllerRepresentable {
+    @ObservedObject var vm: CustomSheetViewModel
+    @Binding var isPresented: Bool
+
+    func makeUIViewController(context: Context) -> CustomSheetScrollViewController {
+        let scrollVC = CustomSheetScrollViewController()
+        scrollVC.isPresented = $isPresented
+        scrollVC.vm = vm
+        return scrollVC
+    }
+
+    func updateUIViewController(_ uiViewController: CustomSheetScrollViewController, context: Context) {
+        uiViewController.scrollView.isScrollEnabled = vm.isScrollEnabled
     }
 }

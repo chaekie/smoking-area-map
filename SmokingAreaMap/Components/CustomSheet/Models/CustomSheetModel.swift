@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Detents {
+struct DetentPositions {
     var closed: CGFloat
     var small: CGFloat
     var large: CGFloat
