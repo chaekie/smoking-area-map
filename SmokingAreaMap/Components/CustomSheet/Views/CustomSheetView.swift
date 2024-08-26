@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct CustomSheetView: View {
+    @EnvironmentObject var mapVM: MapViewModel
     @StateObject var vm = CustomSheetViewModel()
     @Binding var isPresented: Bool
 
@@ -17,22 +18,18 @@ struct CustomSheetView: View {
                 if !vm.isScrollingFromTheTop && vm.dragOffset == 0.0 {
                     Color.white
                 }
-                CustomSheetViewControllerRepresentable(vm: vm, isPresented: $isPresented)
+                CustomSheetViewControllerRepresentable(vm: vm)
             }
             .offset(y: vm.dragOffset)
             .gesture(drag)
             .onAppear() {
                 vm.screenHeight = proxy.size.height
                 vm.setDetents()
-                vm.showSmallSheet()
             }
-            .onChange(of: isPresented) { visible in
-                if visible {
-                    vm.showSmallSheet()
-                } else {
-                    vm.hideSheet()
-                }
+            .onChange(of: isPresented) { isVisible in
+                isVisible ? vm.showSmallSheet() : vm.hideSheet()
             }
+            .shadow(color: !vm.isScrollEnabled ? .black.opacity(0.15) : .clear, radius: 5)
         }
         .ignoresSafeArea()
     }
@@ -40,21 +37,19 @@ struct CustomSheetView: View {
     private var drag: some Gesture {
         DragGesture()
             .onChanged { gesture in
-                vm.onDragGestureChanged(gesture)
+                vm.handleDragChange(gesture: gesture)
             }
             .onEnded { gesture in
-                vm.onDragGestureChanged(gesture)
+                vm.handleSheetDetent(gesture: gesture)
             }
     }
 }
 
 struct CustomSheetViewControllerRepresentable: UIViewControllerRepresentable {
     @ObservedObject var vm: CustomSheetViewModel
-    @Binding var isPresented: Bool
 
     func makeUIViewController(context: Context) -> CustomSheetScrollViewController {
         let scrollVC = CustomSheetScrollViewController()
-        scrollVC.isPresented = $isPresented
         scrollVC.vm = vm
         return scrollVC
     }

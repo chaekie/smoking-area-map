@@ -10,16 +10,13 @@ import KakaoMapsSDK
 import SwiftUI
 
 struct MapRepresentableView: UIViewRepresentable {
+    @Environment(\.scenePhase) var scenePhase
     @EnvironmentObject var mapVM: MapViewModel
     @EnvironmentObject var smokingAreaVM: SmokingAreaViewModel
 
     @Binding var isAppear: Bool
-    var hasDistirctInfo: Bool
     @Binding var shouldMove: Bool
-
-    var onPoiTapped: () -> Void
-    
-    @Environment(\.scenePhase) var scenePhase
+    var hasDistirctInfo: Bool
 
     func makeUIView(context: Self.Context) -> KMViewContainer {
         let view = KMViewContainer()

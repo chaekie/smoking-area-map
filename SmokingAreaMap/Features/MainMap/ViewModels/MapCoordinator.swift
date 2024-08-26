@@ -5,7 +5,6 @@
 //  Created by chaekie on 6/27/24.
 //
 
-import Foundation
 import KakaoMapsSDK
 import SwiftUI
 
@@ -16,6 +15,7 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
 
     private var cameraStoppedHandler: DisposableEventHandler?
     private var cameraStartHandler: DisposableEventHandler?
+    private var mapTapEventHandler: DisposableEventHandler?
 
     init(parent: MapRepresentableView) {
         self.parent = parent
@@ -59,6 +59,8 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
 
     func addViewSucceeded(_ viewName: String, viewInfoName: String) {
         guard let view = controller?.getView(viewName) as? KakaoMap else { return }
+        mapTapEventHandler = view.addMapTappedEventHandler(target: self) { MapCoordinator.mapDidTapped($0) }
+
         let labelManager = view.getLabelManager()
         let shapeManager = view.getShapeManager()
 
@@ -132,10 +134,13 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
         }
     }
 
+    private func mapDidTapped(_ param: ViewInteractionEventParam) {
+        parent.mapVM.selectedSpot = nil
+    }
+
     func poiTappedHandler(_ param: PoiInteractionEventParam) {
         guard let info = param.poiItem.userObject as? SpotPoi else { return }
         parent.mapVM.selectedSpot = info
-        parent.onPoiTapped()
     }
 
     private func createPolygonStyleSet(_ manager: ShapeManager, styleID: String) {
@@ -312,6 +317,12 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
             mapView?.moveCamera(cameraUpdate)
             parent.isAppear = false
         }
+    }
+
+    deinit {
+        cameraStoppedHandler?.dispose()
+        cameraStartHandler?.dispose()
+        mapTapEventHandler?.dispose()
     }
 }
 
