@@ -5,57 +5,32 @@
 //  Created by chaekie on 8/22/24.
 //
 
-import Combine
 import SwiftUI
 
 final class CustomSheetViewModel: ObservableObject {
     @Published var screenHeight = CGFloat.zero
-    @Published var lastOffset = Constants.BottomSheet.initPosition
     @Published var dragOffset = Constants.BottomSheet.initPosition
-    @Published var swipeDirection = SwipeDirection.up
+    @Published var lastOffset = Constants.BottomSheet.initPosition
     @Published var isScrollEnabled = false
     @Published var isScrollingFromTheTop = false
+    @Published var currentDetent = Detent.closed
     @Published var detents = DetentPositions(closed: Constants.BottomSheet.initPosition,
-                                     small: Constants.BottomSheet.initPosition,
-                                     large: 0)
+                                             small: Constants.BottomSheet.initPosition,
+                                             large: 0)
+    var onShowLargeSheet: (() -> Void)?
 
-    private var cancellables = Set<AnyCancellable>()
-    private let dragSubject = PassthroughSubject<DragGesture.Value, Never>()
-
-    init() {
-        setupGestureHandling()
-    }
-
-    private func setupGestureHandling() {
-        dragSubject
-            .sink { [weak self] gesture in
-                guard let self else { return }
-                self.handleDragChange(gesture: gesture)
-            }
-            .store(in: &cancellables)
-
-        dragSubject
-            .map { $0.velocity.height }
-            .sink { [weak self] velocity in
-                self?.handleSwipe(velocity: velocity)
-            }
-            .store(in: &cancellables)
-    }
-
-    private func handleDragChange(gesture: DragGesture.Value) {
+    func handleDragChange(gesture: DragGesture.Value) {
         if !isScrollEnabled {
-            dragOffset = lastOffset + gesture.translation.height
+            let isDragStartAboveSafeArea = gesture.startLocation.y < screenHeight - UIScreen.safeAreaInsets.bottom
+            if isDragStartAboveSafeArea {
+                withAnimation(.spring(response: Constants.BottomSheet.aniDuration,
+                                      dampingFraction: 0.6,
+                                      blendDuration: 0)) {
+                    dragOffset = lastOffset + gesture.translation.height
+                }
+            }
         }
-        setSwipeDirection(by: gesture.velocity.height)
         constrainSheetHeight()
-    }
-
-    private func setSwipeDirection(by velocity: CGFloat) {
-        if velocity < 0 {
-            swipeDirection = .up
-        } else {
-            swipeDirection = .down
-        }
     }
 
     private func constrainSheetHeight() {
@@ -66,7 +41,9 @@ final class CustomSheetViewModel: ObservableObject {
         }
     }
 
-    private func handleSwipe(velocity: CGFloat) {
+    func handleSheetDetent(gesture: DragGesture.Value) {
+        let velocity = gesture.velocity.height
+        let distance = gesture.translation.height
         let isFastSwipeUp = velocity < -Constants.BottomSheet.dragVelocityThreshold
         let isFastSwipeDown = velocity > Constants.BottomSheet.dragVelocityThreshold
 
@@ -75,61 +52,52 @@ final class CustomSheetViewModel: ObservableObject {
         } else if isFastSwipeUp {
             showLargeSheet()
         } else {
-            handleSlowSwipe(dragOffset: dragOffset)
+            handleSlowSwipe(distance: distance)
         }
 
         lastOffset = dragOffset
     }
 
-    func showSmallSheet() {
-        withAnimation(.spring(duration: Constants.BottomSheet.aniDuration)) {
+    func showSmallSheet(duration: CGFloat = Constants.BottomSheet.aniDuration) {
+        withAnimation(.linear(duration: duration)) {
             lastOffset = detents.small
             dragOffset = detents.small
+            currentDetent = .small
             isScrollEnabled = false
         }
     }
 
     func showLargeSheet() {
-        withAnimation(.spring(duration: Constants.BottomSheet.aniDuration)) {
-            lastOffset = detents.large
+        withAnimation(.linear(duration: Constants.BottomSheet.aniDuration)) {
             dragOffset = detents.large
+            lastOffset = detents.large
+            currentDetent = .large
             isScrollEnabled = true
         }
+        onShowLargeSheet?()
     }
 
     func hideSheet() {
-        withAnimation(.spring(duration: Constants.BottomSheet.aniDuration)) {
-            lastOffset = detents.closed
-            dragOffset = detents.closed
-        }
+        lastOffset = detents.closed
+        dragOffset = detents.closed
+        currentDetent = .closed
     }
 
-    private func handleSlowSwipe(dragOffset: CGFloat) {
-        let shouldExpandSheet = dragOffset < detents.small
-        let shouldCollapseSheet = dragOffset > Constants.BottomSheet.distanceThreshold
-
-        switch swipeDirection {
-        case .up:
-            if shouldExpandSheet {
-                showLargeSheet()
-            } else {
-                showSmallSheet()
-            }
-        case .down:
-            if shouldCollapseSheet {
-                showLargeSheet()
-            } else {
-                showSmallSheet()
-            }
+    private func handleSlowSwipe(distance: CGFloat) {
+        let isInThresholdRange = abs(distance) < Constants.BottomSheet.distanceThreshold
+        
+        switch currentDetent {
+        case .small:
+            isInThresholdRange ? showSmallSheet() : showLargeSheet()
+        case .large:
+            isInThresholdRange ? showLargeSheet() : showSmallSheet()
+        default: break
         }
     }
 
     func setDetents() {
         detents.closed = screenHeight
-        detents.small = screenHeight * Constants.BottomSheet.smallSheetHeightRatio
-    }
-
-    func onDragGestureChanged(_ gesture: DragGesture.Value) {
-        dragSubject.send(gesture)
+        dragOffset = detents.closed
+        detents.small = screenHeight * 4/5
     }
 }

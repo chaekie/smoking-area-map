@@ -8,12 +8,32 @@
 import SwiftUI
 
 struct ScrollContentView: View {
-    @Binding var isPresented: Bool
+    @EnvironmentObject var mapVM: MapViewModel
     var collapseSheet: () -> Void
 
     var body: some View {
         VStack(spacing: 10) {
-            ForEach(0..<50) { num in
+            Spacer().frame(height: 20)
+
+            VStack(alignment: .leading, spacing: 8) {
+                if let spot = mapVM.selectedSpot {
+                    Text("위도: \(spot.latitude), 경도: \(spot.longitude)")
+                    Text("주소: \(spot.address)")
+
+                    if let spot = spot as? SmokingArea {
+                        if let roomType = spot.roomType {
+                            Text("개방 형태: \(roomType)")
+                        }
+                    }
+
+                    if let spot = spot as? MySpot {
+                        Text("장소명: \(spot.name)")
+                    }
+
+                }
+            }
+
+            ForEach(0..<20) { num in
                 HStack {
                     Spacer()
                     Button("Row \(num) 닫기") {
@@ -22,7 +42,6 @@ struct ScrollContentView: View {
                     Spacer()
                 }
                 .frame(height: 50)
-                .background(.red.opacity(0.5))
             }
         }
     }

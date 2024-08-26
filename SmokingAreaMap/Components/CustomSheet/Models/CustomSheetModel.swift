@@ -18,8 +18,3 @@ enum Detent {
     case small
     case large
 }
-
-enum SwipeDirection {
-    case up
-    case down
-}

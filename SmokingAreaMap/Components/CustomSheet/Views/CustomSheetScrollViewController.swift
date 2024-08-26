@@ -5,27 +5,18 @@
 //  Created by chaekie on 8/20/24.
 //
 
-import Combine
 import SwiftUI
 
 final class CustomSheetScrollViewController: UIViewController {
-    var isPresented: Binding<Bool>?
     weak var vm: CustomSheetViewModel?
     private var startPosition = CGFloat.zero
-
-    private var cancellables = Set<AnyCancellable>()
-    private let scrollSubject = PassthroughSubject<CGFloat, Never>()
-    private let velocitySubject = PassthroughSubject<CGPoint, Never>()
 
     let scrollView: UIScrollView = {
         let view = UIScrollView()
         view.showsVerticalScrollIndicator = false
-        view.layer.shadowColor = UIColor.black.cgColor
-        view.layer.shadowOpacity = 0.2
-        view.layer.shadowOffset = .zero
-        view.layer.shadowRadius = 5
-        view.layer.masksToBounds = false
         view.contentInsetAdjustmentBehavior = .never
+        view.layer.cornerRadius = 10
+        view.layer.masksToBounds = true
         return view
     }()
 
@@ -33,6 +24,7 @@ final class CustomSheetScrollViewController: UIViewController {
         super.viewDidLoad()
         setupScrollView()
         setupHostingController()
+        vm?.onShowLargeSheet = enableBounces
     }
 
     private func setupScrollView() {
@@ -42,14 +34,12 @@ final class CustomSheetScrollViewController: UIViewController {
     }
 
     private func setupHostingController() {
-        guard let isPresented else { return }
-        let hostingController = UIHostingController(rootView: ScrollContentView(isPresented: isPresented,
-                                                                                collapseSheet: collapseSheet))
+        let hostingController = UIHostingController(rootView: ScrollContentView(collapseSheet: collapseSheet))
         addChild(hostingController)
         scrollView.addSubview(hostingController.view)
         hostingController.didMove(toParent: self)
         setupHostingControllerConstraints(hostingController)
-        scrollView.contentSize = hostingController.view.intrinsicContentSize
+        hostingController.sizingOptions = [.intrinsicContentSize]
     }
 
     private func setupHostingControllerConstraints(_ hostingController: UIHostingController<ScrollContentView>) {
@@ -62,21 +52,19 @@ final class CustomSheetScrollViewController: UIViewController {
             hostingController.view.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
         ])
     }
-    
-    private func setupCombineBindings() {
-        scrollSubject
-            .sink { [weak self] newPosition in
-                guard let self, let vm = self.vm else { return }
-                vm.isScrollingFromTheTop = startPosition <= 0.0 && newPosition < startPosition
-            }
-            .store(in: &cancellables)
 
-        velocitySubject
-            .sink { [weak self] velocity in
-                guard let self else { return }
-                self.handleScrollEnd(velocity: velocity)
-            }
-            .store(in: &cancellables)
+    private func updateScrollingFromTopOnScroll(_ newPosition: CGFloat) {
+        guard let vm else { return }
+        if !vm.isScrollingFromTheTop {
+            vm.isScrollingFromTheTop = startPosition <= 0.0 && newPosition < startPosition
+        }
+    }
+
+    private func updateScrollingFromTopOnEnd(_ newPosition: CGFloat) {
+        guard let vm else { return }
+        if vm.isScrollingFromTheTop {
+            vm.isScrollingFromTheTop = startPosition <= 0.0 && newPosition < startPosition
+        }
     }
 
     private func handleScrollEnd(velocity: CGPoint) {
@@ -88,7 +76,9 @@ final class CustomSheetScrollViewController: UIViewController {
             let isCollapseEnough = newPosition < -Constants.BottomSheet.distanceThreshold
 
             if isFast || isCollapseEnough {
-                vm.showSmallSheet()
+                vm.dragOffset = -newPosition
+                vm.showSmallSheet(duration: 0.1)
+                disableBounces()
             } else {
                 vm.showLargeSheet()
                 scrollView.contentOffset.y = 0
@@ -101,6 +91,14 @@ final class CustomSheetScrollViewController: UIViewController {
         vm.showSmallSheet()
         scrollView.contentOffset.y = 0
     }
+
+    private func enableBounces() {
+        scrollView.bounces = true
+    }
+
+    private func disableBounces() {
+        scrollView.bounces = false
+    }
 }
 
 extension CustomSheetScrollViewController: UIScrollViewDelegate {
@@ -111,12 +109,14 @@ extension CustomSheetScrollViewController: UIScrollViewDelegate {
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
         let newPosition = scrollView.contentOffset.y
-        scrollSubject.send(newPosition)
+        self.updateScrollingFromTopOnScroll(newPosition)
     }
 
     func scrollViewWillEndDragging(_ scrollView: UIScrollView,
                                    withVelocity velocity: CGPoint,
                                    targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        velocitySubject.send(velocity)
+        let newPosition = scrollView.contentOffset.y
+        self.updateScrollingFromTopOnEnd(newPosition)
+        self.handleScrollEnd(velocity: velocity)
     }
 }
