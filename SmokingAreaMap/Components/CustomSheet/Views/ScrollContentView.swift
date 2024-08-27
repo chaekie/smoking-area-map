@@ -10,6 +10,7 @@ import SwiftUI
 struct ScrollContentView: View {
     @EnvironmentObject var mapVM: MapViewModel
     @ObservedObject var vm: CustomSheetViewModel
+    @StateObject var mySpotVM = MySpotViewModel()
 
     @State private var shouldAlert = false
     @State private var uiImage: UIImage?
@@ -42,6 +43,13 @@ struct ScrollContentView: View {
                             Text("사진")
                             buildPhotoThumbnailView(uiImage)
                         }
+
+                        NavigationLink {
+                            MySpotDetailView(spot: spot, shouldAlert: $shouldAlert)
+                                .environmentObject(mySpotVM)
+                        } label: {
+                            Text("수정하러 가기")
+                        }
                     }
                 }
             }
@@ -54,7 +62,10 @@ struct ScrollContentView: View {
             }
         }
         .padding(.horizontal)
-        .frame(minHeight: vm.screenHeight)
+        .frame(minHeight: vm.screenHeight * 2)
+        .onDisappear() {
+            mapVM.selectedSpot = nil
+        }
     }
 
     private func buildPhotoThumbnailView(_ uiImage: UIImage) -> some View {

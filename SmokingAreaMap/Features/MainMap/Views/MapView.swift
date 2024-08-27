@@ -20,8 +20,8 @@ struct MapView: View {
     @State private var showMySpotListView = false
 
     var body: some View {
-        ZStack(alignment: .top) {
-            NavigationStack {
+        NavigationStack {
+            ZStack(alignment: .top) {
                 MapRepresentableView(isAppear: $isAppear,
                                      shouldMove: $shouldMove,
                                      hasDistirctInfo: hasDistirctInfo)
@@ -46,40 +46,48 @@ struct MapView: View {
                     CurrentLocationButton(shouldMove: $shouldMove,
                                           isLocationAlertPresented: $isLocationAlertPresented)
                 }
-                .overlay(alignment: .top) {
-                    if let oldDistrictValue = mapVM.oldDistrictValue,
-                       let newDistrictValue = mapVM.newDistrictValue {
-                        if !smokingAreaVM.isInSeoul {
-                            buildOutOfSeoulText()
-                        } else if newDistrictValue.name == oldDistrictValue.name {
-                            buildLoadMoreButton(newDistrictValue)
-                        } else {
-                            buildSearchHereButton(newDistrictValue)
-                        }
-                    }
-                }
-                .toolbar {
-                    Button {
-                        isSpotModalPresented = false
-                        showMySpotListView = true
-                    } label: {
-                        Label("내 장소 보기", systemImage: "list.bullet")
-                    }.navigationDestination(isPresented: $showMySpotListView) {
-                        MySpotListView()
-                    }
-                }
-            }
-            CustomSheetView(vm: sheetVM, isPresented: $isSpotModalPresented)
-            buildSafeAreaTopForCustomSheet()
 
+                CustomSheetView(vm: sheetVM, isPresented: $isSpotModalPresented)
+                buildSafeAreaTopForCustomSheet()
+            }
+            .ignoresSafeArea()
+            .toolbar {
+                buildSearchOrLoadButtonOrAlertText()
+                buildGoToMySpotListButton()
+            }
         }
         .environmentObject(mapVM)
         .environmentObject(smokingAreaVM)
     }
 
-    func presentSheet(oldSpot: SpotPoi?, newSpot: SpotPoi?) {
+    private func presentSheet(oldSpot: SpotPoi?, newSpot: SpotPoi?) {
         if (oldSpot == nil && newSpot != nil) { isSpotModalPresented = true }
         else if newSpot == nil { isSpotModalPresented = false }
+    }
+
+    private func buildGoToMySpotListButton() -> some View {
+        Button {
+            isSpotModalPresented = false
+            showMySpotListView = true
+        } label: {
+            Label("내 장소 보기", systemImage: "list.bullet")
+        }.navigationDestination(isPresented: $showMySpotListView) {
+            MySpotListView()
+        }
+    }
+
+    @ViewBuilder
+    private func buildSearchOrLoadButtonOrAlertText() -> some View {
+        if let oldDistrictValue = mapVM.oldDistrictValue,
+           let newDistrictValue = mapVM.newDistrictValue {
+            if !smokingAreaVM.isInSeoul {
+                buildOutOfSeoulText()
+            } else if newDistrictValue.name == oldDistrictValue.name {
+                buildLoadMoreButton(newDistrictValue)
+            } else {
+                buildSearchHereButton(newDistrictValue)
+            }
+        }
     }
 
     private func buildOutOfSeoulText() -> some View {
@@ -107,7 +115,7 @@ struct MapView: View {
                 .background(
                     Capsule()
                         .fill(.white)
-                        .shadow(color: .black.opacity(0.2), radius: 5)
+                        .shadow(color: .black.opacity(0.2), radius: 3)
                 )
         }
     }
@@ -129,17 +137,18 @@ struct MapView: View {
                 .background(
                     Capsule()
                         .fill(.white)
-                        .shadow(color: .black.opacity(0.2), radius: 5)
+                        .shadow(color: .black.opacity(0.2), radius: 3)
                 )
         }
         .disabled(smokingAreaVM.page == totalPage || smokingAreaVM.totalCount == 0)
     }
 
     private func buildSafeAreaTopForCustomSheet() -> some View {
-        HStack {}
-            .frame(height: 0)
-            .frame(maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/)
+        let safeAreaTopHeight = UIScreen.safeAreaInsets.top
+        return HStack {}
+            .frame(height: safeAreaTopHeight)
+            .frame(maxWidth: .infinity)
             .background(.white)
-            .offset(y: sheetVM.currentDetent == .large ? 0 : -UIScreen.safeAreaInsets.top)
+            .offset(y: sheetVM.currentDetent == .large ? 0 : -safeAreaTopHeight)
     }
 }

@@ -12,25 +12,27 @@ struct CustomSheetView: View {
     @Binding var isPresented: Bool
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                if !vm.isScrollingFromTheTop && vm.dragOffset == 0.0 {
-                    Color.white
-                }
-                CustomSheetViewControllerRepresentable(vm: vm)
+        ZStack {
+            if !vm.isScrollingFromTheTop && vm.dragOffset == 0.0 {
+                Color.white
             }
-            .offset(y: vm.dragOffset)
-            .gesture(drag)
-            .onAppear() {
-                vm.screenHeight = proxy.size.height
-                vm.setDetents()
-            }
-            .onChange(of: isPresented) { isVisible in
-                isVisible ? vm.showSmallSheet() : vm.hideSheet()
-            }
-            .shadow(color: !vm.isScrollEnabled ? .black.opacity(0.15) : .clear, radius: 5)
+            CustomSheetViewControllerRepresentable(vm: vm)
         }
+        .offset(y: vm.dragOffset)
+        .gesture(drag)
+        .onAppear() {
+            vm.screenHeight = UIScreen.screenSize.height
+            vm.setDetents()
+        }
+        .onChange(of: isPresented) { isVisible in
+            isVisible ? vm.showSmallSheet() : vm.hideSheet()
+        }
+        .onDisappear() {
+            vm.currentDetent = .closed
+        }
+        .shadow(color: !vm.isScrollEnabled ? .black.opacity(0.15) : .clear, radius: 5)
         .ignoresSafeArea()
+        .toolbar(vm.currentDetent == .large ? .hidden : .visible)
     }
 
     private var drag: some Gesture {
