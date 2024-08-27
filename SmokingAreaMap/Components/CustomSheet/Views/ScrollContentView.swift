@@ -9,14 +9,24 @@ import SwiftUI
 
 struct ScrollContentView: View {
     @EnvironmentObject var mapVM: MapViewModel
+    @ObservedObject var vm: CustomSheetViewModel
+
+    @State private var shouldAlert = false
+    @State private var uiImage: UIImage?
     var collapseSheet: () -> Void
 
     var body: some View {
         VStack(spacing: 10) {
             Spacer().frame(height: 20)
-
+            Button {
+                vm.showSmallSheet()
+            } label: {
+                Text("닫기")
+            }
+            
             VStack(alignment: .leading, spacing: 8) {
                 if let spot = mapVM.selectedSpot {
+
                     Text("위도: \(spot.latitude), 경도: \(spot.longitude)")
                     Text("주소: \(spot.address)")
 
@@ -28,21 +38,29 @@ struct ScrollContentView: View {
 
                     if let spot = spot as? MySpot {
                         Text("장소명: \(spot.name)")
+                        if let uiImage {
+                            Text("사진")
+                            buildPhotoThumbnailView(uiImage)
+                        }
                     }
-
                 }
             }
-
-            ForEach(0..<20) { num in
-                HStack {
-                    Spacer()
-                    Button("Row \(num) 닫기") {
-                        collapseSheet()
-                    }
-                    Spacer()
-                }
-                .frame(height: 50)
+            Spacer()
+        }
+        .onReceive(mapVM.$selectedSpot) { spot in
+            if let spot = spot as? MySpot,
+               let photo = spot.photo {
+                uiImage = UIImage(data: photo)
             }
         }
+        .padding(.horizontal)
+        .frame(minHeight: vm.screenHeight)
+    }
+
+    private func buildPhotoThumbnailView(_ uiImage: UIImage) -> some View {
+        Image(uiImage: uiImage)
+            .resizable()
+            .scaledToFit()
+            .clipped()
     }
 }
