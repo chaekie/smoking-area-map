@@ -59,8 +59,13 @@ struct MapView: View {
                     }
                 }
                 .toolbar {
-                    NavigationLink(destination: MySpotListView()) {
+                    Button {
+                        isSpotModalPresented = false
+                        showMySpotListView = true
+                    } label: {
                         Label("내 장소 보기", systemImage: "list.bullet")
+                    }.navigationDestination(isPresented: $showMySpotListView) {
+                        MySpotListView()
                     }
                 }
             }
