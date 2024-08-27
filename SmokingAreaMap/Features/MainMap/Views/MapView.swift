@@ -10,15 +10,17 @@ import SwiftUI
 struct MapView: View {
     @StateObject private var mapVM = MapViewModel()
     @StateObject private var smokingAreaVM = SmokingAreaViewModel()
+    @StateObject private var sheetVM = CustomSheetViewModel()
 
     @State private var isAppear = false
     @State private var hasDistirctInfo = false
     @State private var shouldMove = false
     @State private var isLocationAlertPresented = false
     @State private var isSpotModalPresented = false
+    @State private var showMySpotListView = false
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             NavigationStack {
                 MapRepresentableView(isAppear: $isAppear,
                                      shouldMove: $shouldMove,
@@ -62,8 +64,9 @@ struct MapView: View {
                     }
                 }
             }
+            CustomSheetView(vm: sheetVM, isPresented: $isSpotModalPresented)
+            buildSafeAreaTopForCustomSheet()
 
-            CustomSheetView(isPresented: $isSpotModalPresented)
         }
         .environmentObject(mapVM)
         .environmentObject(smokingAreaVM)
@@ -125,5 +128,13 @@ struct MapView: View {
                 )
         }
         .disabled(smokingAreaVM.page == totalPage || smokingAreaVM.totalCount == 0)
+    }
+
+    private func buildSafeAreaTopForCustomSheet() -> some View {
+        HStack {}
+            .frame(height: 0)
+            .frame(maxWidth: /*@START_MENU_TOKEN@*/.infinity/*@END_MENU_TOKEN@*/)
+            .background(.white)
+            .offset(y: sheetVM.currentDetent == .large ? 0 : -UIScreen.safeAreaInsets.top)
     }
 }

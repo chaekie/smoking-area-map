@@ -34,7 +34,8 @@ final class CustomSheetScrollViewController: UIViewController {
     }
 
     private func setupHostingController() {
-        let hostingController = UIHostingController(rootView: ScrollContentView(collapseSheet: collapseSheet))
+        guard let vm else { return }
+        let hostingController = UIHostingController(rootView: ScrollContentView(vm: vm, collapseSheet: collapseSheet))
         addChild(hostingController)
         scrollView.addSubview(hostingController.view)
         hostingController.didMove(toParent: self)

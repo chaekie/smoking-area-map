@@ -8,8 +8,7 @@
 import SwiftUI
 
 struct CustomSheetView: View {
-    @EnvironmentObject var mapVM: MapViewModel
-    @StateObject var vm = CustomSheetViewModel()
+    @ObservedObject var vm: CustomSheetViewModel
     @Binding var isPresented: Bool
 
     var body: some View {
