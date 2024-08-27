@@ -15,7 +15,7 @@ final class CustomSheetScrollViewController: UIViewController {
         let view = UIScrollView()
         view.showsVerticalScrollIndicator = false
         view.contentInsetAdjustmentBehavior = .never
-        view.layer.cornerRadius = 10
+        view.layer.cornerRadius = Constants.BottomSheet.sheetCornerRadius
         view.layer.masksToBounds = true
         return view
     }()

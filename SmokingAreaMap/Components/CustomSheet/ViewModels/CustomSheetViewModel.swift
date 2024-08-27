@@ -8,7 +8,6 @@
 import SwiftUI
 
 final class CustomSheetViewModel: ObservableObject {
-    @Published var screenHeight = CGFloat.zero
     @Published var dragOffset = Constants.BottomSheet.initPosition
     @Published var lastOffset = Constants.BottomSheet.initPosition
     @Published var isScrollEnabled = false
@@ -21,7 +20,7 @@ final class CustomSheetViewModel: ObservableObject {
 
     func handleDragChange(gesture: DragGesture.Value) {
         if !isScrollEnabled {
-            let isDragStartAboveSafeArea = gesture.startLocation.y < screenHeight - UIScreen.safeAreaInsets.bottom
+            let isDragStartAboveSafeArea = gesture.startLocation.y < UIScreen.screenSize.height - UIScreen.safeAreaInsets.bottom
             if isDragStartAboveSafeArea {
                 withAnimation(.spring(response: Constants.BottomSheet.aniDuration,
                                       dampingFraction: 0.6,
@@ -96,8 +95,9 @@ final class CustomSheetViewModel: ObservableObject {
     }
 
     func setDetents() {
+        let screenHeight = UIScreen.screenSize.height
         detents.closed = screenHeight
         dragOffset = detents.closed
-        detents.small = screenHeight * 4/5
+        detents.small = screenHeight * Constants.BottomSheet.shortDetentRatio
     }
 }

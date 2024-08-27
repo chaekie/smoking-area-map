@@ -8,8 +8,10 @@
 import SwiftUI
 
 struct CustomSheetView: View {
+    @EnvironmentObject var mapVM: MapViewModel
     @ObservedObject var vm: CustomSheetViewModel
     @Binding var isPresented: Bool
+    @State private var draggable = false
 
     var body: some View {
         ZStack {
@@ -19,9 +21,8 @@ struct CustomSheetView: View {
             CustomSheetViewControllerRepresentable(vm: vm)
         }
         .offset(y: vm.dragOffset)
-        .gesture(drag)
+        .gesture(draggable ? drag : nil)
         .onAppear() {
-            vm.screenHeight = UIScreen.screenSize.height
             vm.setDetents()
         }
         .onChange(of: isPresented) { isVisible in
@@ -29,6 +30,15 @@ struct CustomSheetView: View {
         }
         .onDisappear() {
             vm.currentDetent = .closed
+            mapVM.selectedSpot = nil
+        }
+        .onReceive(mapVM.$selectedSpot) { newSpot in
+            if let newSpot = newSpot as? MySpot,
+               let _ = newSpot.photo {
+                draggable = true
+            } else {
+                draggable = false
+            }
         }
         .shadow(color: !vm.isScrollEnabled ? .black.opacity(0.15) : .clear, radius: 5)
         .ignoresSafeArea()

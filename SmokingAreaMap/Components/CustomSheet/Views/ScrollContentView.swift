@@ -17,54 +17,108 @@ struct ScrollContentView: View {
     var collapseSheet: () -> Void
 
     var body: some View {
-        VStack(spacing: 10) {
-            Spacer().frame(height: 20)
-            Button {
-                vm.showSmallSheet()
-            } label: {
-                Text("닫기")
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                if let spot = mapVM.selectedSpot {
-
-                    Text("위도: \(spot.latitude), 경도: \(spot.longitude)")
-                    Text("주소: \(spot.address)")
-
-                    if let spot = spot as? SmokingArea {
-                        if let roomType = spot.roomType {
-                            Text("개방 형태: \(roomType)")
-                        }
+        VStack {
+            if let spot = mapVM.selectedSpot {
+                if vm.currentDetent == .large {
+                    buildCustomToolbar()
+                } else {
+                    if let spot = spot as? MySpot,
+                       let _ = spot.photo {
+                        buildDragIndicator()
+                    } else {
+                        Spacer().frame(height: 20)
                     }
+                }
 
-                    if let spot = spot as? MySpot {
-                        Text("장소명: \(spot.name)")
-                        if let uiImage {
-                            Text("사진")
-                            buildPhotoThumbnailView(uiImage)
-                        }
+                if let spot = spot as? SmokingArea {
+                    buildSmokingAreaSpotInfo(spot)
+                }
 
-                        NavigationLink {
-                            MySpotDetailView(spot: spot, shouldAlert: $shouldAlert)
-                                .environmentObject(mySpotVM)
-                        } label: {
-                            Text("수정하러 가기")
-                        }
-                    }
+                if let spot = spot as? MySpot {
+                    buildMySpotInfo(spot)
                 }
             }
             Spacer()
         }
+        .padding(.horizontal)
+        .frame(minHeight: UIScreen.screenSize.height / 2)
         .onReceive(mapVM.$selectedSpot) { spot in
             if let spot = spot as? MySpot,
                let photo = spot.photo {
                 uiImage = UIImage(data: photo)
             }
         }
-        .padding(.horizontal)
-        .frame(minHeight: vm.screenHeight * 2)
-        .onDisappear() {
-            mapVM.selectedSpot = nil
+    }
+
+    private func buildDragIndicator() -> some View {
+        HStack {
+            Spacer()
+            RoundedRectangle(cornerRadius: 25)
+                .fill(Color.gray.opacity(0.2))
+                .frame(width: 65, height: 6)
+            Spacer()
+        }
+        .frame(height: 20)
+    }
+
+    private func buildCustomToolbar() -> some View {
+        HStack {
+            buildCloseButton()
+            Spacer()
+            if let spot = mapVM.selectedSpot as? MySpot {
+                buildGoToMySpotDetailButton(spot)
+            }
+        }
+        .frame(height: 48)
+    }
+
+    private func buildCloseButton() -> some View {
+        Button {
+            vm.showSmallSheet()
+        } label: {
+            Image(systemName: "chevron.down")
+        }
+    }
+
+    private func buildGoToMySpotDetailButton(_ spot: MySpot) -> some View {
+        NavigationLink {
+            MySpotDetailView(spot: spot, shouldAlert: $shouldAlert)
+                .environmentObject(mySpotVM)
+        } label: {
+            Text("수정")
+        }
+    }
+
+    private func buildSmokingAreaSpotInfo(_ spot: SmokingArea) -> some View {
+        VStack(spacing: 8) {
+            Text(spot.address)
+                .font(.title2)
+                .bold()
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            if let roomType = spot.roomType {
+                Text("개방 형태: \(roomType)")
+                    .foregroundStyle(.gray)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    private func buildMySpotInfo(_ spot: MySpot) -> some View {
+        VStack(spacing: 8) {
+            Text(spot.name)
+                .font(.title2)
+                .bold()
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Text("주소: \(spot.address)")
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .foregroundStyle(.gray)
+
+            if let uiImage {
+                buildPhotoThumbnailView(uiImage)
+                    .padding(.vertical)
+            }
         }
     }
 

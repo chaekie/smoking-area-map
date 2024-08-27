@@ -33,6 +33,8 @@ struct Constants {
         static let dragVelocityThreshold = CGFloat(1000)
         static let scrollVelocityThreshold = CGFloat(1)
         static let distanceThreshold = CGFloat(40)
+        static let sheetCornerRadius = CGFloat(13)
+        static let shortDetentRatio = CGFloat(5) / CGFloat(6)
     }
 
 }
