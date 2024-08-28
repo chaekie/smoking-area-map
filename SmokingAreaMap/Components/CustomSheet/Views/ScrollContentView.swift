@@ -91,10 +91,16 @@ struct ScrollContentView: View {
 
     private func buildSmokingAreaSpotInfo(_ spot: SmokingArea) -> some View {
         VStack(spacing: 8) {
-            Text(spot.address)
-                .font(.title2)
-                .bold()
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack {
+                AdaptiveTextView(text: spot.address)
+                    .fontStyle(.customPreferredFont(for: .title2, weight: .bold))
+
+                Spacer()
+
+                Button("복사") {
+                    UIPasteboard.general.string = spot.address
+                }.font(.callout)
+            }
 
             if let roomType = spot.roomType {
                 Text("개방 형태: \(roomType)")
@@ -106,14 +112,11 @@ struct ScrollContentView: View {
 
     private func buildMySpotInfo(_ spot: MySpot) -> some View {
         VStack(spacing: 8) {
-            Text(spot.name)
-                .font(.title2)
-                .bold()
-                .frame(maxWidth: .infinity, alignment: .leading)
+            AdaptiveTextView(text: spot.name)
+                .fontStyle(.customPreferredFont(for: .title2, weight: .bold))
 
-            Text("주소: \(spot.address)")
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .foregroundStyle(.gray)
+            AdaptiveTextView(text: "주소: \(spot.address)")
+                .fontColor(.gray)
 
             if let uiImage {
                 buildPhotoThumbnailView(uiImage)
