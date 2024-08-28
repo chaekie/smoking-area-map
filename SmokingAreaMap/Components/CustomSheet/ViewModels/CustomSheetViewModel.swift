@@ -8,6 +8,7 @@
 import SwiftUI
 
 final class CustomSheetViewModel: ObservableObject {
+    @Published var spot: SpotPoi?
     @Published var dragOffset = Constants.BottomSheet.initPosition
     @Published var lastOffset = Constants.BottomSheet.initPosition
     @Published var isScrollEnabled = false

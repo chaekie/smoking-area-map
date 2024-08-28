@@ -15,7 +15,6 @@ final class MapViewModel: NSObject, ObservableObject, CLLocationManagerDelegate 
     @Published var oldDistrictValue: DistrictInfo?
     @Published var newDistrictValue: DistrictInfo?
     @Published var locationServiceAuthorized: CLAuthorizationStatus?
-    @Published var selectedSpot: SpotPoi?
 
     private var locationManager: CLLocationManager
     var currentPositionPoi: Poi?

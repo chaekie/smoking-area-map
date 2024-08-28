@@ -52,6 +52,7 @@
 		51EE59822C7EE88F0032B0DA /* +UIFont.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51EE59812C7EE88F0032B0DA /* +UIFont.swift */; };
 		51EE59842C7F16DE0032B0DA /* SingleAxisGeometryReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51EE59832C7F16DE0032B0DA /* SingleAxisGeometryReader.swift */; };
 		51EE59862C7F1F600032B0DA /* AdaptiveTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51EE59852C7F1F600032B0DA /* AdaptiveTextView.swift */; };
+		51EE59882C7F2F2F0032B0DA /* +Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51EE59872C7F2F2F0032B0DA /* +Color.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -102,6 +103,7 @@
 		51EE59812C7EE88F0032B0DA /* +UIFont.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "+UIFont.swift"; sourceTree = "<group>"; };
 		51EE59832C7F16DE0032B0DA /* SingleAxisGeometryReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleAxisGeometryReader.swift; sourceTree = "<group>"; };
 		51EE59852C7F1F600032B0DA /* AdaptiveTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveTextView.swift; sourceTree = "<group>"; };
+		51EE59872C7F2F2F0032B0DA /* +Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "+Color.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -164,6 +166,7 @@
 				514E2EE22C50A41100C86AB9 /* +View.swift */,
 				518886CB2C78758300CD405E /* +UIScreen.swift */,
 				51EE59812C7EE88F0032B0DA /* +UIFont.swift */,
+				51EE59872C7F2F2F0032B0DA /* +Color.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -443,6 +446,7 @@
 				513F45B92C3CF4D400743318 /* KaKaoLocal.swift in Sources */,
 				514E2EFC2C52463900C86AB9 /* AccessCameraView.swift in Sources */,
 				51D2DC022C479A330019D4B1 /* MySpot.xcdatamodeld in Sources */,
+				51EE59882C7F2F2F0032B0DA /* +Color.swift in Sources */,
 				51889BFC2C4F9D55009996F2 /* CurrentLocationButton.swift in Sources */,
 				51D2DC102C4A43720019D4B1 /* RoundedBorderView.swift in Sources */,
 				514E2EFA2C522A6800C86AB9 /* Constants.swift in Sources */,

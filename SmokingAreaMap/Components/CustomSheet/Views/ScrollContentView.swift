@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct ScrollContentView: View {
-    @EnvironmentObject var mapVM: MapViewModel
     @ObservedObject var vm: CustomSheetViewModel
     @StateObject var mySpotVM = MySpotViewModel()
 
@@ -18,11 +17,11 @@ struct ScrollContentView: View {
 
     var body: some View {
         VStack {
-            if let spot = mapVM.selectedSpot {
+            if let spot = vm.spot {
                 if vm.currentDetent == .large {
                     buildCustomToolbar()
                 } else {
-                    if let spot = spot as? MySpot,
+                    if let spot = vm.spot as? MySpot,
                        let _ = spot.photo {
                         buildDragIndicator()
                     } else {
@@ -42,8 +41,8 @@ struct ScrollContentView: View {
         }
         .padding(.horizontal)
         .frame(minHeight: UIScreen.screenSize.height / 2)
-        .onReceive(mapVM.$selectedSpot) { spot in
-            if let spot = spot as? MySpot,
+        .onReceive(vm.$spot) { newSpot in
+            if let spot = newSpot as? MySpot,
                let photo = spot.photo {
                 uiImage = UIImage(data: photo)
             }
@@ -65,7 +64,7 @@ struct ScrollContentView: View {
         HStack {
             buildCloseButton()
             Spacer()
-            if let spot = mapVM.selectedSpot as? MySpot {
+            if let spot = vm.spot as? MySpot {
                 buildGoToMySpotDetailButton(spot)
             }
         }

@@ -135,12 +135,12 @@ final class MapCoordinator: NSObject, MapControllerDelegate, KakaoMapEventDelega
     }
 
     private func mapDidTapped(_ param: ViewInteractionEventParam) {
-        parent.mapVM.selectedSpot = nil
+        parent.smokingAreaVM.selectedSpot = nil
     }
 
     func poiTappedHandler(_ param: PoiInteractionEventParam) {
         guard let info = param.poiItem.userObject as? SpotPoi else { return }
-        parent.mapVM.selectedSpot = info
+        parent.smokingAreaVM.selectedSpot = info
     }
 
     private func createPolygonStyleSet(_ manager: ShapeManager, styleID: String) {

@@ -8,7 +8,6 @@
 import SwiftUI
 
 struct CustomSheetView: View {
-    @EnvironmentObject var mapVM: MapViewModel
     @ObservedObject var vm: CustomSheetViewModel
     @Binding var isPresented: Bool
     @State private var draggable = false
@@ -30,9 +29,8 @@ struct CustomSheetView: View {
         }
         .onDisappear() {
             vm.currentDetent = .closed
-            mapVM.selectedSpot = nil
         }
-        .onReceive(mapVM.$selectedSpot) { newSpot in
+        .onReceive(vm.$spot) { newSpot in
             if let newSpot = newSpot as? MySpot,
                let _ = newSpot.photo {
                 draggable = true

@@ -37,8 +37,9 @@ struct MapView: View {
                         hasDistirctInfo = true
                     }
                 }
-                .onReceive(mapVM.$selectedSpot) { newSpot in
-                    presentSheet(oldSpot: mapVM.selectedSpot, newSpot: newSpot)
+                .onReceive(smokingAreaVM.$selectedSpot) { newSpot in
+                    presentSheet(oldSpot: smokingAreaVM.selectedSpot, newSpot: newSpot)
+                    sheetVM.spot = newSpot
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
