@@ -53,6 +53,9 @@
 		51EE59842C7F16DE0032B0DA /* SingleAxisGeometryReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51EE59832C7F16DE0032B0DA /* SingleAxisGeometryReader.swift */; };
 		51EE59862C7F1F600032B0DA /* AdaptiveTextView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51EE59852C7F1F600032B0DA /* AdaptiveTextView.swift */; };
 		51EE59882C7F2F2F0032B0DA /* +Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51EE59872C7F2F2F0032B0DA /* +Color.swift */; };
+		51EE598B2C8017250032B0DA /* ToastModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51EE598A2C8017250032B0DA /* ToastModel.swift */; };
+		51EE598D2C80172F0032B0DA /* ToastView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51EE598C2C80172F0032B0DA /* ToastView.swift */; };
+		51EE598F2C80173B0032B0DA /* ToastViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51EE598E2C80173B0032B0DA /* ToastViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -104,6 +107,9 @@
 		51EE59832C7F16DE0032B0DA /* SingleAxisGeometryReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SingleAxisGeometryReader.swift; sourceTree = "<group>"; };
 		51EE59852C7F1F600032B0DA /* AdaptiveTextView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveTextView.swift; sourceTree = "<group>"; };
 		51EE59872C7F2F2F0032B0DA /* +Color.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "+Color.swift"; sourceTree = "<group>"; };
+		51EE598A2C8017250032B0DA /* ToastModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastModel.swift; sourceTree = "<group>"; };
+		51EE598C2C80172F0032B0DA /* ToastView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastView.swift; sourceTree = "<group>"; };
+		51EE598E2C80173B0032B0DA /* ToastViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToastViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -353,6 +359,7 @@
 		51D2DC122C4A484B0019D4B1 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				51EE59892C80170A0032B0DA /* Toast */,
 				518886C12C76F48A00CD405E /* CustomSheet */,
 				51D2DBDA2C4777C00019D4B1 /* DeferView.swift */,
 				51D2DC132C4A486E0019D4B1 /* CenterContainerView.swift */,
@@ -362,6 +369,16 @@
 				51EE59852C7F1F600032B0DA /* AdaptiveTextView.swift */,
 			);
 			path = Components;
+			sourceTree = "<group>";
+		};
+		51EE59892C80170A0032B0DA /* Toast */ = {
+			isa = PBXGroup;
+			children = (
+				51EE598A2C8017250032B0DA /* ToastModel.swift */,
+				51EE598C2C80172F0032B0DA /* ToastView.swift */,
+				51EE598E2C80173B0032B0DA /* ToastViewModel.swift */,
+			);
+			path = Toast;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -463,12 +480,15 @@
 				518886C32C76F4A600CD405E /* CustomSheetViewModel.swift in Sources */,
 				51D2DBD72C46ADC60019D4B1 /* MySpotDetailView.swift in Sources */,
 				5177DEFF2C292E77003D8701 /* SmokingArea.swift in Sources */,
+				51EE598F2C80173B0032B0DA /* ToastViewModel.swift in Sources */,
 				51D2DBCE2C4501C30019D4B1 /* PersistenceController.swift in Sources */,
 				51EE59822C7EE88F0032B0DA /* +UIFont.swift in Sources */,
 				514E2F032C576BD300C86AB9 /* ModalView.swift in Sources */,
 				514E2EFF2C563DD200C86AB9 /* MySpotViewModel.swift in Sources */,
 				51D2DC092C479DD00019D4B1 /* MySpot+CoreDataClass.swift in Sources */,
 				51D2DC0A2C479DD00019D4B1 /* MySpot+CoreDataProperties.swift in Sources */,
+				51EE598D2C80172F0032B0DA /* ToastView.swift in Sources */,
+				51EE598B2C8017250032B0DA /* ToastModel.swift in Sources */,
 				5177DEFD2C292BB9003D8701 /* SmokingAreaViewModel.swift in Sources */,
 				51D2DBD02C450A920019D4B1 /* MySpotListView.swift in Sources */,
 				512083922C37824C00F12295 /* District.swift in Sources */,

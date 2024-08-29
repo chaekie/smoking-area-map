@@ -13,6 +13,7 @@ struct ScrollContentView: View {
 
     @State private var shouldAlert = false
     @State private var uiImage: UIImage?
+    @State private var toast: Toast? = nil
     var collapseSheet: () -> Void
 
     var body: some View {
@@ -47,6 +48,7 @@ struct ScrollContentView: View {
                 uiImage = UIImage(data: photo)
             }
         }
+        .toastView(toast: $toast)
     }
 
     private func buildDragIndicator() -> some View {
@@ -93,12 +95,8 @@ struct ScrollContentView: View {
             HStack {
                 AdaptiveTextView(text: spot.address)
                     .fontStyle(.customPreferredFont(for: .title2, weight: .bold))
-
                 Spacer()
-
-                Button("복사") {
-                    UIPasteboard.general.string = spot.address
-                }.font(.callout)
+                buildCopyButton(text: spot.address)
             }
 
             if let roomType = spot.roomType {
@@ -109,13 +107,29 @@ struct ScrollContentView: View {
         }
     }
 
+    private func buildCopyButton(text: String) -> some View {
+        Button("복사") {
+            UIPasteboard.general.string = text
+            if UIPasteboard.general.string == text {
+                toast = Toast(message: "주소가 복사되었습니다", style: .success)
+            } else {
+                toast = Toast(message: "복사에 실패했습니다", style: .error)
+            }
+        }.font(.callout)
+    }
+
     private func buildMySpotInfo(_ spot: MySpot) -> some View {
         VStack(spacing: 8) {
             AdaptiveTextView(text: spot.name)
                 .fontStyle(.customPreferredFont(for: .title2, weight: .bold))
 
-            AdaptiveTextView(text: "주소: \(spot.address)")
-                .fontColor(.gray)
+            HStack {
+                AdaptiveTextView(text: "주소: \(spot.address)")
+                    .fontColor(.gray)
+                Spacer()
+                buildCopyButton(text: spot.address)
+
+            }
 
             if let uiImage {
                 buildPhotoThumbnailView(uiImage)
