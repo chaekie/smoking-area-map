@@ -10,17 +10,11 @@ import SwiftUI
 struct CustomSheetView: View {
     @ObservedObject var vm: CustomSheetViewModel
     @Binding var isPresented: Bool
-    @State private var draggable = false
 
     var body: some View {
-        ZStack {
-            if !vm.isScrollingFromTheTop && vm.dragOffset == 0.0 {
-                Color.white
-            }
-            CustomSheetViewControllerRepresentable(vm: vm)
-        }
+        CustomSheetViewControllerRepresentable(vm: vm)
         .offset(y: vm.dragOffset)
-        .gesture(draggable ? drag : nil)
+        .gesture(drag)
         .onAppear() {
             vm.setDetents()
         }
@@ -30,17 +24,8 @@ struct CustomSheetView: View {
         .onDisappear() {
             vm.currentDetent = .closed
         }
-        .onReceive(vm.$spot) { newSpot in
-            if let newSpot = newSpot as? MySpot,
-               let _ = newSpot.photo {
-                draggable = true
-            } else {
-                draggable = false
-            }
-        }
-        .shadow(color: !vm.isScrollEnabled ? .black.opacity(0.15) : .clear, radius: 5)
-        .ignoresSafeArea()
-        .toolbar(vm.currentDetent == .large ? .hidden : .visible)
+        .shadow(color: vm.isSheetHeaderVisible ? .clear : .black.opacity(0.15), radius: 5)
+        .toolbar(vm.isToolbarVisible ? .visible : .hidden)
     }
 
     private var drag: some Gesture {

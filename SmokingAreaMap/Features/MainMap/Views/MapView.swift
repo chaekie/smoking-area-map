@@ -31,6 +31,7 @@ struct MapView: View {
                 }
                 .onDisappear() {
                     self.isAppear = false
+                    sheetVM.updateIsSheetHeaderVisibleIfNeeded(condition: false)
                 }
                 .onReceive(mapVM.$oldDistrictValue) { value in
                     if value != nil {
@@ -39,7 +40,6 @@ struct MapView: View {
                 }
                 .onReceive(smokingAreaVM.$selectedSpot) { newSpot in
                     presentSheet(oldSpot: smokingAreaVM.selectedSpot, newSpot: newSpot)
-                    sheetVM.spot = newSpot
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .ignoresSafeArea()
@@ -48,8 +48,8 @@ struct MapView: View {
                                           isLocationAlertPresented: $isLocationAlertPresented)
                 }
 
+                CustomSheetCoverView(vm: sheetVM)
                 CustomSheetView(vm: sheetVM, isPresented: $isSpotModalPresented)
-                buildSafeAreaTopForCustomSheet()
             }
             .ignoresSafeArea()
             .toolbar {
@@ -64,6 +64,7 @@ struct MapView: View {
     private func presentSheet(oldSpot: SpotPoi?, newSpot: SpotPoi?) {
         if (oldSpot == nil && newSpot != nil) { isSpotModalPresented = true }
         else if newSpot == nil { isSpotModalPresented = false }
+        sheetVM.spot = newSpot
     }
 
     private func buildGoToMySpotListButton() -> some View {
@@ -142,14 +143,5 @@ struct MapView: View {
                 )
         }
         .disabled(smokingAreaVM.page == totalPage || smokingAreaVM.totalCount == 0)
-    }
-
-    private func buildSafeAreaTopForCustomSheet() -> some View {
-        let safeAreaTopHeight = UIScreen.safeAreaInsets.top
-        return HStack {}
-            .frame(height: safeAreaTopHeight)
-            .frame(maxWidth: .infinity)
-            .background(.white)
-            .offset(y: sheetVM.currentDetent == .large ? 0 : -safeAreaTopHeight)
     }
 }

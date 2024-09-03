@@ -28,13 +28,15 @@ struct Constants {
     }
 
     struct BottomSheet {
-        static let aniDuration = 0.2
+        static let aniDuration = CGFloat(0.2)
         static let initPosition = CGFloat(1500)
         static let dragVelocityThreshold = CGFloat(1000)
         static let scrollVelocityThreshold = CGFloat(1)
         static let distanceThreshold = CGFloat(40)
         static let sheetCornerRadius = CGFloat(13)
         static let shortDetentRatio = CGFloat(5) / CGFloat(6)
+        static let dragIndicatorHeight = CGFloat(20)
+        static let headerHeight = CGFloat(48)
     }
 
 }

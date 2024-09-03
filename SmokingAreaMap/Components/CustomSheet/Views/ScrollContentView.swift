@@ -17,68 +17,43 @@ struct ScrollContentView: View {
     var collapseSheet: () -> Void
 
     var body: some View {
-        VStack {
-            if let spot = vm.spot {
-                if vm.currentDetent == .large {
-                    buildCustomToolbar()
-                } else {
-                    if let spot = vm.spot as? MySpot,
-                       let _ = spot.photo {
-                        buildDragIndicator()
-                    } else {
-                        Spacer().frame(height: 20)
+            VStack {
+                if let spot = vm.spot {
+                    buildDragIndicator()
+
+                    if let spot = spot as? SmokingArea {
+                        buildSmokingAreaSpotInfo(spot)
+                    }
+
+                    if let spot = spot as? MySpot {
+                        buildMySpotInfo(spot)
                     }
                 }
-
-                if let spot = spot as? SmokingArea {
-                    buildSmokingAreaSpotInfo(spot)
-                }
-
-                if let spot = spot as? MySpot {
-                    buildMySpotInfo(spot)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .frame(minHeight: UIScreen.screenSize.height + 1)
+            .background(RoundedRectangle(cornerRadius: Constants.BottomSheet.sheetCornerRadius).fill(.white))
+            .onReceive(vm.$spot) { newSpot in
+                if let spot = newSpot as? MySpot,
+                   let photo = spot.photo {
+                    uiImage = UIImage(data: photo)
                 }
             }
-            Spacer()
-        }
-        .padding(.horizontal)
-        .frame(minHeight: UIScreen.screenSize.height / 2)
-        .onReceive(vm.$spot) { newSpot in
-            if let spot = newSpot as? MySpot,
-               let photo = spot.photo {
-                uiImage = UIImage(data: photo)
-            }
-        }
-        .toastView(toast: $toast)
+            .toastView(toast: $toast)
     }
 
     private func buildDragIndicator() -> some View {
         HStack {
             Spacer()
-            RoundedRectangle(cornerRadius: 25)
-                .fill(Color.gray.opacity(0.2))
-                .frame(width: 65, height: 6)
-            Spacer()
-        }
-        .frame(height: 20)
-    }
-
-    private func buildCustomToolbar() -> some View {
-        HStack {
-            buildCloseButton()
-            Spacer()
-            if let spot = vm.spot as? MySpot {
-                buildGoToMySpotDetailButton(spot)
+            if !vm.isSheetHeaderVisible {
+                RoundedRectangle(cornerRadius: 25)
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: 65, height: 4)
             }
+            Spacer()
         }
-        .frame(height: 48)
-    }
-
-    private func buildCloseButton() -> some View {
-        Button {
-            vm.showSmallSheet()
-        } label: {
-            Image(systemName: "chevron.down")
-        }
+        .frame(height: Constants.BottomSheet.dragIndicatorHeight)
     }
 
     private func buildGoToMySpotDetailButton(_ spot: MySpot) -> some View {
