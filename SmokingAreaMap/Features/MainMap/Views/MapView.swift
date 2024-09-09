@@ -31,7 +31,7 @@ struct MapView: View {
                 }
                 .onDisappear() {
                     self.isAppear = false
-                    sheetVM.updateIsSheetHeaderVisibleIfNeeded(condition: false)
+                    sheetVM.updateVisibilityIfNeeded(currentValue: &sheetVM.isSheetCoverVisible, newValue: false)
                 }
                 .onReceive(mapVM.$oldDistrictValue) { value in
                     if value != nil {

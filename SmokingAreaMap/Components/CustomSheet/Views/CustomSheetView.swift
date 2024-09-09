@@ -19,22 +19,22 @@ struct CustomSheetView: View {
             vm.setDetents()
         }
         .onChange(of: isPresented) { isVisible in
-            isVisible ? vm.showSmallSheet() : vm.hideSheet()
+            vm.showSheet(detent: isVisible ? .small : .closed)
         }
         .onDisappear() {
             vm.currentDetent = .closed
         }
-        .shadow(color: vm.isSheetHeaderVisible ? .clear : .black.opacity(0.15), radius: 5)
+        .shadow(color: vm.isSheetCoverVisible ? .clear : .black.opacity(0.15), radius: 5)
         .toolbar(vm.isToolbarVisible ? .visible : .hidden)
     }
 
     private var drag: some Gesture {
         DragGesture()
             .onChanged { gesture in
-                vm.handleDragChange(gesture: gesture)
+                vm.onDragChanged(gesture: gesture)
             }
             .onEnded { gesture in
-                vm.handleSheetDetent(gesture: gesture)
+                vm.onDragEnded(gesture: gesture)
             }
     }
 }

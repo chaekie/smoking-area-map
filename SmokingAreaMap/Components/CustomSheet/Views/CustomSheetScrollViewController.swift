@@ -9,7 +9,7 @@ import SwiftUI
 
 final class CustomSheetScrollViewController: UIViewController {
     weak var vm: CustomSheetViewModel?
-    private var startPosition = CGFloat.zero
+    private var startOffset = CGFloat.zero
 
     let scrollView: UIScrollView = {
         let view = UIScrollView()
@@ -25,6 +25,7 @@ final class CustomSheetScrollViewController: UIViewController {
         setupScrollView()
         setupHostingController()
         vm?.onShowLargeSheet = enableBounces
+        vm?.onShowSmallSheet = scrollToTop
     }
 
     private func setupScrollView() {
@@ -35,7 +36,7 @@ final class CustomSheetScrollViewController: UIViewController {
 
     private func setupHostingController() {
         guard let vm else { return }
-        let hostingController = UIHostingController(rootView: ScrollContentView(vm: vm, collapseSheet: collapseSheet))
+        let hostingController = UIHostingController(rootView: ScrollContentView(vm: vm))
         addChild(hostingController)
         scrollView.addSubview(hostingController.view)
         hostingController.didMove(toParent: self)
@@ -55,61 +56,64 @@ final class CustomSheetScrollViewController: UIViewController {
         ])
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
+    private func showFullScreenModal() {
+        guard let vm else { return }
+        withAnimation(.easeInOut(duration: 0.1)) {
+            vm.updateVisibilityIfNeeded(currentValue: &vm.isSheetCoverVisible, newValue: true)
+            vm.updateVisibilityIfNeeded(currentValue: &vm.isToolbarVisible, newValue: false)
+        }
+        self.scrollView.contentInsetAdjustmentBehavior = .always
+        self.scrollView.backgroundColor = .white
     }
 
-    private func updateIsScrollingDownFromTopIfNeeded(newValue: Bool) {
+    private func showCollapsingModal(offset: CGFloat) {
         guard let vm else { return }
-        if vm.isScrollingDownFromTop == false && newValue == true {
-            vm.isScrollingDownFromTop = true
+        let shouldShowToolbar = offset < -30
+        withAnimation(.easeInOut(duration: Constants.BottomSheet.aniDuration)) {
+            vm.updateVisibilityIfNeeded(currentValue: &vm.isToolbarVisible, newValue: shouldShowToolbar)
+            vm.updateVisibilityIfNeeded(currentValue: &vm.isSheetCoverVisible, newValue: false)
+        }
+        self.scrollView.contentInsetAdjustmentBehavior = .never
+        self.scrollView.backgroundColor = .clear
+    }
+
+    private func onScrolling(_ newOffset: CGFloat) {
+        guard let vm else { return }
+
+        if vm.isSheetCollapsing {
+            self.showCollapsingModal(offset: newOffset)
+        }
+
+        if newOffset > 0 && vm.currentDetent == .large {
+            self.showFullScreenModal()
         }
     }
 
-    private func updateScrollingFromTopOnScrollStart(_ newPosition: CGFloat) {
+    private func onDragDidStop(velocity: CGPoint) {
         guard let vm else { return }
-        let isScrollingDownFromTop = startPosition <= 0 && (newPosition <= startPosition)
-        updateIsScrollingDownFromTopIfNeeded(newValue: isScrollingDownFromTop)
-        if isScrollingDownFromTop {
-            self.scrollView.backgroundColor = .clear
-            vm.updateIsSheetHeaderVisibleIfNeeded(condition: false)
-            vm.updateIsToolbarVisibleIfNeeded(condition: true)
-        } else {
-            if newPosition > 0 {
-                self.scrollView.backgroundColor = .white
-                vm.updateIsSheetHeaderVisibleIfNeeded(condition: true)
-                vm.updateIsToolbarVisibleIfNeeded(condition: false)
-            }
-        }
-    }
+        let newOffset = scrollView.contentOffset.y
 
-    private func updateScrollingFromTopOnScrollEnd(_ newPosition: CGFloat) {
-    }
-
-    private func handleScrollEnd(velocity: CGPoint) {
-        guard let vm else { return }
-        let newPosition = scrollView.contentOffset.y
-
-        if vm.isScrollingDownFromTop {
+        if vm.isSheetCollapsing {
             let isFast = velocity.y < -Constants.BottomSheet.scrollVelocityThreshold
-            let isCollapseEnough = newPosition < -Constants.BottomSheet.distanceThreshold
+            let isCollapseEnough = newOffset < -Constants.BottomSheet.largeToSmallDistanceThreshold
+            let shouldCollapseSheet = isFast || isCollapseEnough
 
-            if isFast || isCollapseEnough {
-                vm.dragOffset = -newPosition + vm.detents.large
-                vm.showSmallSheet(duration: 0.15)
-                disableBounces()
+            if !shouldCollapseSheet {
+                vm.showSheet(detent: .large)
             } else {
-                vm.showLargeSheet()
+                self.scrollView.isScrollEnabled = false
+                disableBounces()
+                vm.dragOffset = -newOffset + vm.detents.large
+                vm.showSheet(detent: .small, duration: 0.15)
             }
-            scrollView.contentOffset.y = 0
-            scrollView.backgroundColor = .white
         }
     }
 
-    func collapseSheet() {
+    private func onScrollDidStop(_ newPosition: CGFloat) {
         guard let vm else { return }
-        vm.showSmallSheet()
-        scrollView.contentOffset.y = 0
+        if newPosition == 0 && vm.currentDetent == .large {
+            self.showFullScreenModal()
+        }
     }
 
     private func enableBounces() {
@@ -119,34 +123,39 @@ final class CustomSheetScrollViewController: UIViewController {
     private func disableBounces() {
         scrollView.bounces = false
     }
+
+    private func scrollToTop() {
+        scrollView.contentOffset.y = 0
+    }
 }
 
 extension CustomSheetScrollViewController: UIScrollViewDelegate {
 
     func scrollViewWillBeginDragging(_ scrollView: UIScrollView) {
-        startPosition = scrollView.contentOffset.y
+        startOffset = scrollView.contentOffset.y
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        let newPosition = scrollView.contentOffset.y
-        self.updateScrollingFromTopOnScrollStart(newPosition)
+        guard let vm else { return }
+        let newOffset = scrollView.contentOffset.y
+        vm.updateTitleVisibility(offset: newOffset)
+        vm.updateIsSheetCollapsing(offset: newOffset, startOffset: startOffset)
+        self.onScrolling(newOffset)
+    }
+
+    func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+        self.onDragDidStop(velocity: velocity)
     }
 
     func scrollViewDidEndDecelerating(_ scrollView: UIScrollView) {
-        let newPosition = scrollView.contentOffset.y
-        self.updateScrollingFromTopOnScrollEnd(newPosition)
+        let newOffset = scrollView.contentOffset.y
+        self.onScrollDidStop(newOffset)
     }
 
     func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
         if decelerate == false {
-            let newPosition = scrollView.contentOffset.y
-            self.updateScrollingFromTopOnScrollEnd(newPosition)
+            let newOffset = scrollView.contentOffset.y
+            self.onScrollDidStop(newOffset)
         }
-    }
-
-    func scrollViewWillEndDragging(_ scrollView: UIScrollView,
-                                   withVelocity velocity: CGPoint,
-                                   targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-        self.handleScrollEnd(velocity: velocity)
     }
 }

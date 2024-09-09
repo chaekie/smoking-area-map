@@ -11,10 +11,8 @@ struct ScrollContentView: View {
     @ObservedObject var vm: CustomSheetViewModel
     @StateObject var mySpotVM = MySpotViewModel()
 
-    @State private var shouldAlert = false
     @State private var uiImage: UIImage?
     @State private var toast: Toast? = nil
-    var collapseSheet: () -> Void
 
     var body: some View {
             VStack {
@@ -46,7 +44,7 @@ struct ScrollContentView: View {
     private func buildDragIndicator() -> some View {
         HStack {
             Spacer()
-            if !vm.isSheetHeaderVisible {
+            if !vm.isSheetCoverVisible {
                 RoundedRectangle(cornerRadius: 25)
                     .fill(Color.gray.opacity(0.2))
                     .frame(width: 65, height: 4)
@@ -54,15 +52,6 @@ struct ScrollContentView: View {
             Spacer()
         }
         .frame(height: Constants.BottomSheet.dragIndicatorHeight)
-    }
-
-    private func buildGoToMySpotDetailButton(_ spot: MySpot) -> some View {
-        NavigationLink {
-            MySpotDetailView(spot: spot, shouldAlert: $shouldAlert)
-                .environmentObject(mySpotVM)
-        } label: {
-            Text("수정")
-        }
     }
 
     private func buildSmokingAreaSpotInfo(_ spot: SmokingArea) -> some View {

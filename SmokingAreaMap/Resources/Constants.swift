@@ -32,7 +32,9 @@ struct Constants {
         static let initPosition = CGFloat(1500)
         static let dragVelocityThreshold = CGFloat(1000)
         static let scrollVelocityThreshold = CGFloat(1)
-        static let distanceThreshold = CGFloat(40)
+        static let toolbarVisibilityThreshold = UIScreen.screenSize.height * 1/3
+        static let largeToSmallDistanceThreshold = CGFloat(30)
+        static let smallToLargeDistanceThreshold = CGFloat(40)
         static let sheetCornerRadius = CGFloat(13)
         static let shortDetentRatio = CGFloat(5) / CGFloat(6)
         static let dragIndicatorHeight = CGFloat(20)
