@@ -130,16 +130,19 @@ final class CustomSheetViewModel: ObservableObject {
                                   completion: @escaping () -> Void,
                                   detent: Detent,
                                   duration: CGFloat) {
-        if detent == .large {
+        switch detent {
+        case .closed:
+            updateState()
+        case .small:
+            handleVisibilityUpdates(detentOffset: getDetentOffset(for: detent))
+            withAnimation(animation, updateState)
+        case .large:
             if #available(iOS 17.0, *) {
                 withAnimation(animation, updateState, completion: completion)
             } else {
                 withAnimation(animation, updateState)
                 DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: completion)
             }
-        } else {
-            handleVisibilityUpdates(detentOffset: getDetentOffset(for: detent))
-            withAnimation(animation, updateState)
         }
     }
 
