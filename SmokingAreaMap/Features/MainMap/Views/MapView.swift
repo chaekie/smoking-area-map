@@ -10,58 +10,86 @@ import SwiftUI
 struct MapView: View {
     @StateObject private var mapVM = MapViewModel()
     @StateObject private var smokingAreaVM = SmokingAreaViewModel()
+    @StateObject private var sheetVM = CustomSheetViewModel()
 
     @State private var isAppear = false
     @State private var hasDistirctInfo = false
     @State private var shouldMove = false
     @State private var isLocationAlertPresented = false
-    @State private var isPoiModalPresented = false
+    @State private var isSpotModalPresented = false
+    @State private var showMySpotListView = false
 
     var body: some View {
         NavigationStack {
-            MapRepresentableView(isAppear: $isAppear,
-                                 hasDistirctInfo: hasDistirctInfo,
-                                 shouldMove: $shouldMove,
-                                 onPoiTapped: onPoiTapped)
-            .onAppear() {
-                self.isAppear = true
-                smokingAreaVM.getAllSpot()
-            }
-            .onDisappear() {
-                self.isAppear = false
-            }
-            .onReceive(mapVM.$oldDistrictValue) { value in
-                if value != nil {
-                    hasDistirctInfo = true
+            ZStack(alignment: .top) {
+                MapRepresentableView(isAppear: $isAppear,
+                                     shouldMove: $shouldMove,
+                                     hasDistirctInfo: hasDistirctInfo)
+                .onAppear() {
+                    self.isAppear = true
+                    smokingAreaVM.getAllSpot()
                 }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .ignoresSafeArea()
-            .overlay(alignment: .bottomTrailing) {
-                buildPoiSheetView()
-                CurrentLocationButton(shouldMove: $shouldMove,
-                                      isLocationAlertPresented: $isLocationAlertPresented)
-            }
-            .overlay(alignment: .top) {
-                if let oldDistrictValue = mapVM.oldDistrictValue,
-                   let newDistrictValue = mapVM.newDistrictValue {
-                    if !smokingAreaVM.isInSeoul {
-                        buildOutOfSeoulText()
-                    } else if newDistrictValue.name == oldDistrictValue.name {
-                        buildLoadMoreButton(newDistrictValue)
-                    } else {
-                        buildSearchHereButton(newDistrictValue)
+                .onDisappear() {
+                    self.isAppear = false
+                    sheetVM.updateVisibilityIfNeeded(currentValue: &sheetVM.isSheetCoverVisible, newValue: false)
+                }
+                .onReceive(mapVM.$oldDistrictValue) { value in
+                    if value != nil {
+                        hasDistirctInfo = true
                     }
                 }
-            }
-            .toolbar {
-                NavigationLink(destination: MySpotListView()) {
-                    Label("내 장소 보기", systemImage: "list.bullet")
+                .onReceive(smokingAreaVM.$selectedSpot) { newSpot in
+                    presentSheet(oldSpot: smokingAreaVM.selectedSpot, newSpot: newSpot)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .ignoresSafeArea()
+                .overlay(alignment: .bottomTrailing) {
+                    CurrentLocationButton(shouldMove: $shouldMove,
+                                          isLocationAlertPresented: $isLocationAlertPresented)
+                }
+
+                CustomSheetCoverView(vm: sheetVM)
+                CustomSheetView(vm: sheetVM, isPresented: $isSpotModalPresented)
+            }
+            .ignoresSafeArea()
+            .toolbar {
+                buildSearchOrLoadButtonOrAlertText()
+                buildGoToMySpotListButton()
             }
         }
         .environmentObject(mapVM)
         .environmentObject(smokingAreaVM)
+    }
+
+    private func presentSheet(oldSpot: SpotPoi?, newSpot: SpotPoi?) {
+        if (oldSpot == nil && newSpot != nil) { isSpotModalPresented = true }
+        else if newSpot == nil { isSpotModalPresented = false }
+        sheetVM.spot = newSpot
+    }
+
+    private func buildGoToMySpotListButton() -> some View {
+        Button {
+            isSpotModalPresented = false
+            showMySpotListView = true
+        } label: {
+            Label("내 장소 보기", systemImage: "list.bullet")
+        }.navigationDestination(isPresented: $showMySpotListView) {
+            MySpotListView()
+        }
+    }
+
+    @ViewBuilder
+    private func buildSearchOrLoadButtonOrAlertText() -> some View {
+        if let oldDistrictValue = mapVM.oldDistrictValue,
+           let newDistrictValue = mapVM.newDistrictValue {
+            if !smokingAreaVM.isInSeoul {
+                buildOutOfSeoulText()
+            } else if newDistrictValue.name == oldDistrictValue.name {
+                buildLoadMoreButton(newDistrictValue)
+            } else {
+                buildSearchHereButton(newDistrictValue)
+            }
+        }
     }
 
     private func buildOutOfSeoulText() -> some View {
@@ -89,7 +117,7 @@ struct MapView: View {
                 .background(
                     Capsule()
                         .fill(.white)
-                        .shadow(color: .black.opacity(0.2), radius: 5)
+                        .shadow(color: .black.opacity(0.2), radius: 3)
                 )
         }
     }
@@ -111,44 +139,9 @@ struct MapView: View {
                 .background(
                     Capsule()
                         .fill(.white)
-                        .shadow(color: .black.opacity(0.2), radius: 5)
+                        .shadow(color: .black.opacity(0.2), radius: 3)
                 )
         }
         .disabled(smokingAreaVM.page == totalPage || smokingAreaVM.totalCount == 0)
-    }
-
-    private func buildPoiSheetView() -> some View {
-        Button("") { }
-            .bottomSheet(
-                isPresented: $isPoiModalPresented,
-                detents: [.custom(identifier: .customHeight, resolver: { _ in
-                    return 150
-                })]
-            ) {
-                VStack(alignment: .leading, spacing: 8) {
-                    if let spot = mapVM.selectedSpot {
-                        Text("위도: \(spot.latitude), 경도: \(spot.longitude)")
-                        Text("주소: \(spot.address)")
-
-                        if let spot = spot as? SmokingArea {
-                            if let roomType = spot.roomType {
-                                Text("개방 형태: \(roomType)")
-                            }
-                        }
-
-                        if let spot = spot as? MySpot {
-                            Text("장소명: \(spot.name)")
-                        }
-
-                    }
-                }
-                .padding(.horizontal)
-            }
-    }
-
-    private func onPoiTapped() {
-        if isPoiModalPresented == false {
-            isPoiModalPresented = true
-        }
     }
 }

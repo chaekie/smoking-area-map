@@ -22,6 +22,8 @@ final class SmokingAreaViewModel: ObservableObject {
     @Published var mySpots: [MySpot] = [] {
         didSet { isMySpotUpdated = true }
     }
+    
+    @Published var selectedSpot: SpotPoi?
 
     @Published var totalCount = 0
     @Published var page = 1
